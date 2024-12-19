@@ -1,0 +1,52 @@
+2024-12-08 13:03:10:310 [31merror[39m: [31mERROR 💥 Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to[39m
+[31m535 5.7.8  https://support.google.com/mail/?p=BadCredentials d9443c01a7336-21641f46d53sm4186215ad.59 - gsmtp[39m
+2024-12-08 13:28:10:2810 [31merror[39m: [31m401 - Invalid credentials[39m
+2024-12-08 13:28:12:2812 [31merror[39m: [31m401 - Invalid credentials[39m
+2024-12-08 13:50:11:5011 [31merror[39m: [31m401 - User role has been changed. Please log in again.[39m
+2024-12-08 13:50:11:5011 [31merror[39m: [31m401 - User role has been changed. Please log in again.[39m
+2024-12-08 14:06:52:652 [31merror[39m: [31m401 - Invalid credentials[39m
+2024-12-08 14:09:43:943 [31merror[39m: [31m400 - Invalid or expired verification token[39m
+2024-12-08 16:07:36:736 [31merror[39m: [31m404 - Can't find /api/bookings/initial on this server![39m
+2024-12-08 16:07:36:736 [31merror[39m: [31mProgramming Error  Can't find /api/bookings/initial on this server![39m
+2024-12-08 16:07:38:738 [31merror[39m: [31m404 - Can't find /api/bookings/initial on this server![39m
+2024-12-08 16:07:38:738 [31merror[39m: [31mProgramming Error  Can't find /api/bookings/initial on this server![39m
+2024-12-08 16:10:03:103 [31merror[39m: [31m404 - Can't find /api/bookings/initial on this server![39m
+2024-12-08 16:10:03:103 [31merror[39m: [31mProgramming Error  Can't find /api/bookings/initial on this server![39m
+2024-12-08 17:06:55:655 [31merror[39m: [31m404 - Can't find /api/bookings/availability?checkIn=2024-12-17T17:00:00.000Z&checkOut=2024-12-18T17:00:00.000Z on this server![39m
+2024-12-08 17:36:33:3633 [31merror[39m: [31m401 - The user belonging to this token no longer exists.[39m
+2024-12-08 17:36:33:3633 [31merror[39m: [31m401 - The user belonging to this token no longer exists.[39m
+2024-12-14 17:28:03:283 [31merror[39m: [31m404 - Can't find /api/bookings/initialize on this server![39m
+2024-12-14 17:28:03:283 [31merror[39m: [31mProgramming Error  Can't find /api/bookings/initialize on this server![39m
+2024-12-14 17:51:59:5159 [31merror[39m: [31m404 - Can't find /api/api/bookings on this server![39m
+2024-12-14 17:51:59:5159 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings on this server![39m
+2024-12-14 17:52:58:5258 [31merror[39m: [31m404 - Can't find /api/api/bookings on this server![39m
+2024-12-14 17:52:58:5258 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings on this server![39m
+2024-12-14 17:53:19:5319 [31merror[39m: [31m404 - Can't find /api/api/bookings on this server![39m
+2024-12-14 17:53:19:5319 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings on this server![39m
+2024-12-14 17:53:30:5330 [31merror[39m: [31m404 - Can't find /api/api/bookings on this server![39m
+2024-12-14 17:53:30:5330 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings on this server![39m
+2024-12-14 17:54:43:5443 [31merror[39m: [31m500 - Booking validation failed: paymentMethod: Booking must have a payment method, checkIn: Booking must have a check-in date, checkOut: Booking must have a check-out date, guests: Booking must have number of guests, totalPrice: Booking must have a total price[39m
+2024-12-14 17:54:46:5446 [31merror[39m: [31m500 - Booking validation failed: paymentMethod: Booking must have a payment method, checkIn: Booking must have a check-in date, checkOut: Booking must have a check-out date, guests: Booking must have number of guests, totalPrice: Booking must have a total price[39m
+2024-12-14 17:54:54:5454 [31merror[39m: [31m500 - Booking validation failed: paymentMethod: Booking must have a payment method, checkIn: Booking must have a check-in date, checkOut: Booking must have a check-out date, guests: Booking must have number of guests, totalPrice: Booking must have a total price[39m
+2024-12-14 18:24:39:2439 [31merror[39m: [31m404 - Can't find /api/api/bookings/initialize on this server![39m
+2024-12-14 18:24:39:2439 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings/initialize on this server![39m
+2024-12-14 18:26:07:267 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 18:48:47:4847 [31merror[39m: [31m500 - Booking validation failed: paymentMethod: Booking must have a payment method[39m
+2024-12-14 18:49:02:492 [31merror[39m: [31m500 - Booking validation failed: paymentMethod: Booking must have a payment method[39m
+2024-12-14 18:50:51:5051 [31merror[39m: [31m500 - E11000 duplicate key error collection: villa.bookings index: bookingId_1 dup key: { bookingId: null }[39m
+2024-12-14 18:51:36:5136 [31merror[39m: [31m400 - Selected dates are not available[39m
+2024-12-14 18:51:38:5138 [31merror[39m: [31m400 - Selected dates are not available[39m
+2024-12-14 18:53:40:5340 [31merror[39m: [31m500 - E11000 duplicate key error collection: villa.bookings index: bookingId_1 dup key: { bookingId: null }[39m
+2024-12-14 18:56:11:5611 [31merror[39m: [31m400 - Selected dates are not available[39m
+2024-12-14 19:16:16:1616 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 19:16:16:1616 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:06:51:651 [31merror[39m: [31m404 - Can't find /api/api/bookings on this server![39m
+2024-12-14 20:06:51:651 [31merror[39m: [31mProgramming Error  Can't find /api/api/bookings on this server![39m
+2024-12-14 20:11:08:118 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:45:32:4532 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:45:57:4557 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:46:13:4613 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:46:14:4614 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 20:46:27:4627 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 21:20:57:2057 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-14 21:23:19:2319 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m

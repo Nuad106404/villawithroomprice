@@ -1,0 +1,7 @@
+2024-12-08 14:23:05:235 [32minfo[39m: [32mServer running on port 5001[39m
+2024-12-08 14:23:05:235 [31merror[39m: [31mMongoDB Connection Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.[39m
+2024-12-08 14:23:40:2340 [32minfo[39m: [32mServer running on port 5001[39m
+2024-12-08 14:23:40:2340 [31merror[39m: [31mMongoDB Connection Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.[39m
+2024-12-08 14:23:50:2350 [32minfo[39m: [32mServer closed[39m
+2024-12-08 14:23:58:2358 [32minfo[39m: [32mServer running on port 5001[39m
+2024-12-08 14:23:58:2358 [31merror[39m: [31mMongoDB Connection Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.[39m

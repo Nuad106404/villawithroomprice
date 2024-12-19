@@ -1,0 +1,4 @@
+2024-12-08 14:53:57:5357 [31merror[39m: [31mUNCAUGHT EXCEPTION! Shutting down...[39m
+2024-12-08 16:06:57:657 [31merror[39m: [31mUNCAUGHT EXCEPTION! Shutting down...[39m
+2024-12-08 16:35:14:3514 [31merror[39m: [31mUNCAUGHT EXCEPTION! Shutting down...[39m
+2024-12-08 17:06:55:655 [31merror[39m: [31m404 - Can't find /api/bookings/availability?checkIn=2024-12-17T17:00:00.000Z&checkOut=2024-12-18T17:00:00.000Z on this server![39m
