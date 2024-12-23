@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthLayout } from './AuthLayout';
+import api from '../../utils/axios';
+import { toast } from 'sonner';
 
 interface LocationState {
   from?: string;
@@ -24,6 +26,8 @@ export function LoginForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
 
   useEffect(() => {
     // Redirect if already logged in
@@ -68,6 +72,24 @@ export function LoginForm() {
     clearError();
   };
 
+  const handleResendVerification = async () => {
+    try {
+      setResendingEmail(true);
+      const response = await api.post('/auth/resend-verification', {
+        email: formData.email
+      });
+      
+      if (response.data.status === 'success') {
+        toast.success('Verification email has been resent. Please check your inbox.');
+      }
+    } catch (error: any) {
+      console.error('Error resending verification:', error);
+      toast.error(error.response?.data?.message || 'Failed to resend verification email');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -77,12 +99,14 @@ export function LoginForm() {
 
     try {
       await login(formData.email, formData.password);
-      // The AuthRoute component will handle redirection based on:
-      // 1. User role (admin/regular user)
-      // 2. Previous location (stored in location.state.from)
     } catch (error: any) {
       console.error('Login error:', error);
-      setFormError(error.response?.data?.message || t('auth.loginFailed'));
+      if (error.response?.data?.isVerified === false) {
+        setIsUnverified(true);
+        setFormError('Please verify your email before logging in.');
+      } else {
+        setFormError(error.response?.data?.message || t('auth.loginFailed'));
+      }
     }
   };
 
@@ -103,6 +127,34 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <AnimatePresence mode="wait">
+            {(formError || error) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-red-500 dark:text-red-400">
+                    {formError || error}
+                  </p>
+                  {isUnverified && (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resendingEmail}
+                      className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline focus:outline-none"
+                    >
+                      {resendingEmail ? 'Sending...' : 'Resend verification email'}
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div>
             <label
               htmlFor="email"
@@ -163,28 +215,6 @@ export function LoginForm() {
               </button>
             </div>
           </div>
-
-          <AnimatePresence mode="wait">
-            {(error || formError) && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="rounded-md bg-red-50 dark:bg-red-900/50 p-4"
-              >
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700 dark:text-red-200">
-                      {error || formError}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">

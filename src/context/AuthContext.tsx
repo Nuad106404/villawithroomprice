@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/axios';
 
 interface User {
   id: string;
@@ -27,8 +27,6 @@ interface RegisterData {
   lastName: string;
 }
 
-const API_URL = 'http://localhost:5001/api';
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -37,124 +35,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Configure axios defaults
   useEffect(() => {
-    axios.defaults.baseURL = API_URL;
-    if (token) {
-      console.log('Setting axios default header with token');
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      console.log('Removing axios default header');
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
-
-  // Load user data if token exists
-  useEffect(() => {
-    const loadUser = async () => {
-      if (!token) {
-        console.log('No token found, skipping user load');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        console.log('Attempting to load user data with token');
-        const response = await axios.get('/auth/me');
-        console.log('User data loaded:', response.data);
-
-        if (response.data.status !== 'success') {
-          throw new Error(response.data.message || 'Failed to load user data');
+    const initializeAuth = async () => {
+      if (token) {
+        try {
+          const response = await api.get('/auth/me');
+          if (response.data.status === 'success') {
+            setUser(response.data.data.user);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setToken(null);
+          localStorage.removeItem('token');
         }
-
-        setUser(response.data.data.user);
-      } catch (error: any) {
-        console.error('Error loading user:', error.response?.data || error.message);
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
-        setError('Session expired. Please login again.');
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
-    loadUser();
+    initializeAuth();
   }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       setError(null);
-      console.log('Attempting login...');
-
-      const response = await axios.post('/auth/login', { email, password });
-      console.log('Login response:', response.data);
+      const response = await api.post('/auth/login', { email, password });
       
-      if (response.data.status !== 'success') {
-        throw new Error(response.data.message || 'Login failed');
+      if (response.data.status === 'success') {
+        const { token: newToken, data } = response.data;
+        setToken(newToken);
+        setUser(data.user);
+        localStorage.setItem('token', newToken);
       }
-
-      const { token: newToken, data } = response.data;
-      const userData = data.user;
-
-      // Save token to localStorage and update axios headers
-      localStorage.setItem('token', newToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
-      setToken(newToken);
-      setUser(userData);
-
-      console.log('Login successful, user role:', userData.role);
     } catch (error: any) {
-      console.error('Login error:', error.response?.data || error.message);
+      console.error('Login error:', error);
       setError(error.response?.data?.message || 'Login failed');
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (userData: RegisterData) => {
     try {
-      setIsLoading(true);
       setError(null);
-      console.log('Attempting registration...');
-
-      const response = await axios.post('/auth/register', userData);
-      console.log('Registration response:', response.data);
-
-      if (response.data.status !== 'success') {
-        throw new Error(response.data.message || 'Registration failed');
-      }
-
-      const { token: newToken, data } = response.data;
-      const newUser = data.user;
-
-      localStorage.setItem('token', newToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      const response = await api.post('/auth/register', userData);
       
-      setToken(newToken);
-      setUser(newUser);
-      console.log('Registration successful, user role:', newUser.role);
+      if (response.data.status === 'success') {
+        const { token: newToken, data } = response.data;
+        setToken(newToken);
+        setUser(data.user);
+        localStorage.setItem('token', newToken);
+      }
     } catch (error: any) {
-      console.error('Registration error:', error.response?.data || error.message);
+      console.error('Registration error:', error);
       setError(error.response?.data?.message || 'Registration failed');
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setToken(null);
     setUser(null);
-    setError(null);
+    setToken(null);
+    localStorage.removeItem('token');
   };
 
-  const clearError = () => setError(null);
+  const clearError = () => {
+    setError(null);
+  };
 
   const value = {
     user,

@@ -24,6 +24,7 @@ const AdminSettings = lazy(() => import('./pages/dashboard/AdminSettings'));
 const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout'));
 const BookingPage = lazy(() => import('./pages/BookingPage'));
 const VerifySuccessPage = lazy(() => import('./pages/auth/VerifySuccessPage'));
+const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationPage'));
 const CustomerInfoForm = lazy(() => import('./components/booking/CustomerInfoForm').then(module => ({ default: module.CustomerInfoForm })));
 const PaymentMethod = lazy(() => import('./components/booking/PaymentMethod').then(module => ({ default: module.PaymentMethod })));
 const BookingConfirmation = lazy(() => import('./components/booking/BookingConfirmation').then(module => ({ default: module.BookingConfirmation })));
@@ -95,6 +96,7 @@ function App() {
                         <RegisterForm />
                       </AuthRoute>
                     } />
+                    <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
                     <Route path="/auth/verify-success" element={<VerifySuccessPage />} />
 
                     {/* Admin Routes - Protected and nested */}

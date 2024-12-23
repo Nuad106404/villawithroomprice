@@ -4,3 +4,17 @@
 2024-12-14 18:51:58:5158 [32minfo[39m: [32mNew reservation created with ID: undefined[39m
 2024-12-14 18:54:22:5422 [32minfo[39m: [32mNew reservation created with ID: undefined[39m
 2024-12-14 18:56:18:5618 [32minfo[39m: [32mNew reservation created with ID: undefined[39m
+2024-12-24 00:13:21:1321 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:13:21:1321 [32minfo[39m: [32mExtracted values:[39m
+2024-12-24 00:13:21:1321 [31merror[39m: [31mError creating booking: Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:14:08:148 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:14:08:148 [32minfo[39m: [32mExtracted values:[39m
+2024-12-24 00:14:08:148 [31merror[39m: [31mError creating booking: Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:15:27:1527 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:15:27:1527 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m
+2024-12-24 00:15:31:1531 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:15:31:1531 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m
+2024-12-24 00:16:35:1635 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:16:35:1635 [32minfo[39m: [32mNew booking created with ID: 67699af371a5bf20fa4c0f0a[39m
+2024-12-24 00:16:47:1647 [32minfo[39m: [32mReceived booking request with body:[39m
+2024-12-24 00:16:48:1648 [32minfo[39m: [32mNew booking created with ID: 67699b0071a5bf20fa4c0f0f[39m

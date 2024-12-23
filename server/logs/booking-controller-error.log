@@ -1,0 +1,4 @@
+2024-12-24 00:13:21:1321 [31merror[39m: [31mError creating booking: Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:14:08:148 [31merror[39m: [31mError creating booking: Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:15:27:1527 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m
+2024-12-24 00:15:31:1531 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m

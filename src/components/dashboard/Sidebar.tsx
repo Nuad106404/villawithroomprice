@@ -41,11 +41,6 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
       icon: Calendar,
     },
     {
-      path: '/admin/users',
-      name: t('dashboard.users'),
-      icon: Users,
-    },
-    {
       path: '/admin/settings',
       name: t('dashboard.settings'),
       icon: Settings,

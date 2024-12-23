@@ -50,3 +50,21 @@
 2024-12-14 20:46:27:4627 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
 2024-12-14 21:20:57:2057 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
 2024-12-14 21:23:19:2319 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:08:21:821 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:08:38:838 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:09:08:98 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:09:17:917 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:09:42:942 [31merror[39m: [31m401 - You are not logged in. Please log in to get access.[39m
+2024-12-24 00:10:54:1054 [31merror[39m: [31m500 - Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:10:54:1054 [31merror[39m: [31mProgramming Error  Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:11:17:1117 [31merror[39m: [31m500 - Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:11:17:1117 [31merror[39m: [31mProgramming Error  Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:11:42:1142 [31merror[39m: [31m500 - Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:11:42:1142 [31merror[39m: [31mProgramming Error  Cannot read properties of undefined (reading '_id')[39m
+2024-12-24 00:12:28:1228 [31merror[39m: [31m400 - Customer information (firstName, lastName, email, phone) is required[39m
+2024-12-24 00:13:21:1321 [31merror[39m: [31m400 - Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:14:08:148 [31merror[39m: [31m400 - Please provide all required customer information: firstName, lastName, email, and phone[39m
+2024-12-24 00:15:27:1527 [31merror[39m: [31m500 - Booking.checkAvailability is not a function[39m
+2024-12-24 00:15:27:1527 [31merror[39m: [31mProgramming Error  Booking.checkAvailability is not a function[39m
+2024-12-24 00:15:31:1531 [31merror[39m: [31m500 - Booking.checkAvailability is not a function[39m
+2024-12-24 00:15:31:1531 [31merror[39m: [31mProgramming Error  Booking.checkAvailability is not a function[39m
