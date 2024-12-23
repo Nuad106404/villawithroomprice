@@ -3,11 +3,13 @@ import { Clock } from 'lucide-react';
 import { useCountdownTimer } from '../../hooks/useCountdownTimer';
 
 interface CountdownTimerProps {
+  startTime: Date;
+  endTime: Date;
   onExpire?: () => void;
 }
 
-export function CountdownTimer({ onExpire }: CountdownTimerProps) {
-  const { hours, minutes, seconds, isExpired } = useCountdownTimer();
+export function CountdownTimer({ startTime, endTime, onExpire }: CountdownTimerProps) {
+  const { hours, minutes, seconds, isExpired } = useCountdownTimer({ startTime, endTime });
 
   useEffect(() => {
     if (isExpired && onExpire) {

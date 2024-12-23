@@ -12,6 +12,7 @@ import { SlipUpload } from './SlipUpload';
 import cn from 'classnames';
 import { BookingLayout } from './BookingLayout';
 import { motion } from 'framer-motion';
+import { CountdownTimer } from './CountdownTimer';
 
 export function PaymentMethod() {
   const { t } = useTranslation();
@@ -139,6 +140,18 @@ export function PaymentMethod() {
           <p className="text-gray-600 dark:text-gray-400">
             {t('booking.payment.choosePreferred')}
           </p>
+          {booking && (
+            <div className="mt-4">
+              <CountdownTimer
+                startTime={new Date(booking.createdAt)}
+                endTime={new Date(booking.expiresAt)}
+                onExpire={() => {
+                  toast.error(t('booking.errors.expired'));
+                  navigate('/');
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">

@@ -1,36 +1,26 @@
 import { useState, useEffect } from 'react';
 
-const TIMER_KEY = 'booking_timer';
-const PAYMENT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+interface CountdownTimerProps {
+  startTime: Date;
+  endTime: Date;
+}
 
-export function useCountdownTimer() {
+export function useCountdownTimer({ startTime, endTime }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    const savedEndTime = localStorage.getItem(TIMER_KEY);
-    if (savedEndTime) {
-      const remaining = parseInt(savedEndTime) - Date.now();
-      return remaining > 0 ? remaining : 0;
-    }
-    return PAYMENT_WINDOW;
+    const remaining = new Date(endTime).getTime() - Date.now();
+    return remaining > 0 ? remaining : 0;
   });
 
   useEffect(() => {
-    if (timeLeft === PAYMENT_WINDOW) {
-      const endTime = Date.now() + PAYMENT_WINDOW;
-      localStorage.setItem(TIMER_KEY, endTime.toString());
-    }
-
     const timer = setInterval(() => {
       setTimeLeft((current) => {
-        const newTime = Math.max(0, current - 1000);
-        if (newTime === 0) {
-          localStorage.removeItem(TIMER_KEY);
-        }
+        const newTime = Math.max(0, new Date(endTime).getTime() - Date.now());
         return newTime;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [endTime]);
 
   const hours = Math.floor(timeLeft / (60 * 60 * 1000));
   const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
