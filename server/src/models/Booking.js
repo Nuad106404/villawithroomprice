@@ -67,14 +67,7 @@ const bookingSchema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     default: function() {
-      return new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
-    },
-    index: true
-  },
-  paymentDeadline: {
-    type: Date,
-    default: function() {
-      return new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+      return new Date(Date.now() + 60 * 1000); // 1 minute from now
     },
     index: true
   }
@@ -94,18 +87,6 @@ bookingSchema.index(
   }
 );
 
-// Create TTL index for payment deadline
-bookingSchema.index(
-  { paymentDeadline: 1 },
-  { 
-    expireAfterSeconds: 0,
-    partialFilterExpression: {
-      status: 'pending_payment',
-      paymentSlipUrl: { $exists: false }
-    }
-  }
-);
-
 // Pre-save middleware
 bookingSchema.pre('save', function(next) {
   try {
@@ -114,7 +95,6 @@ bookingSchema.pre('save', function(next) {
       this.status = 'in_review';
       this.canExpire = false;
       this.expiresAt = null;
-      this.paymentDeadline = null; // Remove deadline since payment is uploaded
     }
 
     // If status changes to anything other than pending, prevent expiration
@@ -123,14 +103,9 @@ bookingSchema.pre('save', function(next) {
       this.expiresAt = null;
     }
 
-    // If status is changing to pending_payment, set deadline
+    // If status is changing to pending_payment, set expiration
     if (this.isModified('status') && this.status === 'pending_payment' && !this.paymentSlipUrl) {
-      this.paymentDeadline = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes deadline
-    }
-
-    // If status changes to anything other than pending_payment, remove deadline
-    if (this.isModified('status') && this.status !== 'pending_payment') {
-      this.paymentDeadline = null;
+      this.expiresAt = new Date(Date.now() + 60 * 1000); // 1 minute deadline
     }
 
     next();
@@ -150,18 +125,7 @@ bookingSchema.pre(/^find/, function(next) {
       // Keep documents that haven't expired yet
       { expiresAt: { $gt: now } },
       // Keep documents with payment slip
-      { paymentSlipUrl: { $exists: true } },
-      // Keep all documents with payment slip
-      { paymentSlipUrl: { $exists: true } },
-      // Keep documents not in pending_payment status
-      { status: { $ne: 'pending_payment' } },
-      // Keep pending_payment documents within deadline
-      { 
-        $and: [
-          { status: 'pending_payment' },
-          { paymentDeadline: { $gt: now } }
-        ]
-      }
+      { paymentSlipUrl: { $exists: true } }
     ]
   });
   
@@ -177,21 +141,6 @@ bookingSchema.methods.isExpired = function() {
   return this.expiresAt && this.expiresAt < new Date();
 };
 
-// Instance method to check if payment deadline is expired
-bookingSchema.methods.isPaymentExpired = function() {
-  // Never expire if payment slip exists
-  if (this.paymentSlipUrl) {
-    return false;
-  }
-  
-  // Only check deadline for pending_payment status
-  if (this.status !== 'pending_payment') {
-    return false;
-  }
-  
-  return this.paymentDeadline && this.paymentDeadline < new Date();
-};
-
 // Static method to manually clean up expired bookings if needed
 bookingSchema.statics.cleanupExpired = async function() {
   const now = new Date();
@@ -199,16 +148,6 @@ bookingSchema.statics.cleanupExpired = async function() {
     canExpire: true,
     expiresAt: { $lt: now },
     paymentSlipUrl: { $exists: false }
-  });
-};
-
-// Static method to clean up expired payment deadlines
-bookingSchema.statics.cleanupExpiredPayments = async function() {
-  const now = new Date();
-  return this.deleteMany({
-    status: 'pending_payment',
-    paymentSlipUrl: { $exists: false },
-    paymentDeadline: { $lt: now }
   });
 };
 
@@ -227,20 +166,9 @@ Promise.all([
       }
     }
   ),
-  // Create TTL index for payment deadline
-  Booking.collection.createIndex(
-    { paymentDeadline: 1 },
-    { 
-      expireAfterSeconds: 0,
-      partialFilterExpression: {
-        status: 'pending_payment',
-        paymentSlipUrl: { $exists: false }
-      }
-    }
-  ),
   // Create compound index for queries
   Booking.collection.createIndex(
-    { canExpire: 1, expiresAt: 1, paymentSlipUrl: 1, status: 1, paymentDeadline: 1 },
+    { canExpire: 1, expiresAt: 1, paymentSlipUrl: 1, status: 1 },
     { background: true }
   )
 ]).then(() => {
@@ -253,9 +181,8 @@ Promise.all([
 setInterval(async () => {
   try {
     await Booking.cleanupExpired();
-    await Booking.cleanupExpiredPayments();
   } catch (error) {
-    console.error('Error cleaning up expired bookings and payments:', error);
+    console.error('Error cleaning up expired bookings:', error);
   }
 }, 30 * 1000); // Run every 30 seconds
 

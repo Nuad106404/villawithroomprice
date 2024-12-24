@@ -1,19 +1,16 @@
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
+import { configureStore, createSlice } from '@reduxjs/toolkit';
+
+// Create a temporary reducer since we removed auth
+const appSlice = createSlice({
+  name: 'app',
+  initialState: {},
+  reducers: {}
+});
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
+    app: appSlice.reducer
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        // Ignore these action types
-        ignoredActions: ['auth/login/fulfilled', 'auth/register/fulfilled'],
-        // Ignore these paths in the state
-        ignoredPaths: ['auth.user'],
-      },
-    }),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

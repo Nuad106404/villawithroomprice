@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import publicBookingRoutes from './src/routes/public/bookings.js';
 import uploadRoutes from './routes/upload.mjs';
-import authRoutes from './src/routes/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -34,7 +33,6 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 // Routes
 app.use('/api/bookings', publicBookingRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
