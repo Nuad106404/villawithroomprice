@@ -4,9 +4,62 @@
 
 @layer base {
   :root {
-    --rdp-cell-size: 40px;
-    --rdp-accent-color: rgb(2 132 199);
-    --rdp-background-color: rgb(2 132 199);
+    --background: 220 33% 98%;
+    --foreground: 220 14% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 4%;
+    --primary: 36 100% 45%;
+    --primary-foreground: 36 100% 98%;
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 220 14% 4%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 14% 45%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 14% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 36 100% 45%;
+    --radius: 0.75rem;
+
+    --gradient-subtle-start: rgba(255, 165, 26, 0.1);
+    --gradient-subtle-end: rgba(255, 185, 77, 0.1);
+    --gradient-text-start: #e68a00;
+    --gradient-text-end: #ffa51a;
+  }
+
+  .dark {
+    --background: 220 14% 4%;
+    --foreground: 0 0% 98%;
+    --card: 220 14% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 14% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 36 100% 45%;
+    --primary-foreground: 36 100% 98%;
+    --secondary: 220 14% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 220 14% 12%;
+    --muted-foreground: 220 14% 65%;
+    --accent: 220 14% 12%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 14% 12%;
+    --input: 220 14% 12%;
+    --ring: 36 100% 45%;
+
+    --gradient-subtle-start: rgba(255, 165, 26, 0.05);
+    --gradient-subtle-end: rgba(255, 185, 77, 0.05);
+    --gradient-text-start: #ffa51a;
+    --gradient-text-end: #ffcd80;
+  }
+
+  * {
+    @apply border-border;
   }
 
   html {
@@ -14,85 +67,86 @@
   }
 
   body {
-    @apply antialiased text-gray-900 dark:text-white;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .glass-morphism {
+    @apply bg-white/[0.05] backdrop-blur-[20px] dark:bg-black/[0.05];
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-morphism-dark {
+    @apply bg-black/[0.05] backdrop-blur-[20px];
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply relative overflow-hidden rounded-2xl;
-    backdrop-filter: blur(10px);
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.05)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    @apply relative overflow-hidden rounded-2xl glass-morphism dark:glass-morphism-dark;
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-amber-600;
+    @apply text-gradient;
+    --gradient-text-start: theme('colors.brand.500');
+    --gradient-text-end: theme('colors.brand.400');
   }
 
   .floating-animation {
     animation: float 6s ease-in-out infinite;
   }
-}
 
-.rdp {
-  --rdp-cell-size: 40px;
-  --rdp-accent-color: var(--rdp-accent-color);
-  --rdp-background-color: var(--rdp-background-color);
-  margin: 0;
+  .button-gradient {
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      90deg,
+      var(--gradient-text-start),
+      var(--gradient-text-end)
+    );
+  }
+
+  .button-gradient::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity;
+    background: linear-gradient(
+      90deg,
+      var(--gradient-text-end),
+      var(--gradient-text-start)
+    );
+  }
+
+  .button-gradient:hover::before {
+    @apply opacity-100;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-amber-500/50 rounded-full hover:bg-amber-500;
+  @apply bg-surface-300/50 hover:bg-surface-400/50 rounded-full transition-colors;
 }
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  .rdp-months {
-    justify-content: center;
+  .glass-morphism,
+  .glass-morphism-dark {
+    backdrop-filter: none;
   }
-
-  .rdp-month {
-    width: 100%;
-  }
-
-  .rdp-table {
-    max-width: 100%;
-  }
-
-  .rdp-cell {
-    padding: 0;
-  }
-
-  .rdp-head_cell,
-  .rdp-day {
-    width: 100%;
-    height: 40px;
-  }
-}
-
-/* Dark mode enhancements */
-.dark .glass-card {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.2),
-    rgba(0, 0, 0, 0.1)
-  );
-  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Animations */

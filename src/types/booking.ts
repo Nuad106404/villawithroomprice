@@ -26,3 +26,19 @@ export interface BookingState {
   paymentMethod: 'bank_transfer' | 'promptpay' | null;
   reservationId: string | null;
 }
+
+export interface Booking {
+  _id: string;
+  customerInfo: CustomerInfo;
+  bookingDetails: BookingDetails;
+  status: 'pending' | 'pending_payment' | 'in_review' | 'confirmed' | 'cancelled' | 'expired';
+  paymentMethod: 'bank_transfer' | 'promptpay' | null;
+  paymentSlipUrl?: string;
+  expiresAt: Date;
+  canExpire: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type BookingStatus = Booking['status'];
+export type PaymentMethod = Booking['paymentMethod'];

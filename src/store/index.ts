@@ -1,15 +1,11 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
-
-// Create a temporary reducer since we removed auth
-const appSlice = createSlice({
-  name: 'app',
-  initialState: {},
-  reducers: {}
-});
+import { configureStore } from '@reduxjs/toolkit';
+import bookingReducer from './slices/bookingSlice';
+import adminReducer from './slices/adminSlice';
 
 export const store = configureStore({
   reducer: {
-    app: appSlice.reducer
+    booking: bookingReducer,
+    admin: adminReducer,
   },
 });
 
