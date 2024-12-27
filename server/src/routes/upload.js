@@ -8,7 +8,15 @@ const router = express.Router();
 // Configure multer for handling file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/slips';
+    let uploadDir = 'uploads';
+    
+    // Set different directories based on upload type
+    if (file.fieldname === 'slip') {
+      uploadDir = 'uploads/slips';
+    } else if (file.fieldname === 'image') {
+      uploadDir = 'uploads/images';
+    }
+    
     // Create the uploads directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -17,7 +25,8 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'slip-' + uniqueSuffix + path.extname(file.originalname));
+    const prefix = file.fieldname === 'slip' ? 'slip-' : '';
+    cb(null, prefix + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -50,8 +59,22 @@ router.post('/slip', upload.single('slip'), (req, res) => {
     const fileUrl = `/uploads/slips/${req.file.filename}`;
     res.json({ fileUrl });
   } catch (error) {
-    console.error('Error uploading file:', error);
-    res.status(500).json({ error: 'Error uploading file' });
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Handle general image upload
+router.post('/', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Return the file URL
+    const imageUrl = `/uploads/images/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

@@ -6,7 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Calendar, Clock, DollarSign } from 'lucide-react';
 import { formatPrice } from '../../lib/utils';
 
-const AdminDashboard = () => {
+export default function AdminDashboard() {
   const dispatch = useDispatch();
   const { stats, recentBookings, loading, error } = useSelector((state: RootState) => state.admin);
 
@@ -89,39 +89,27 @@ const AdminDashboard = () => {
                   className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {booking.customerName}
-                    </p>
+                    <p className="font-medium">{booking.customerName}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(booking.createdAt).toLocaleDateString()}
+                      {new Date(booking.checkIn).toLocaleDateString()}
                     </p>
                   </div>
-                  <div>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      booking.status === 'confirmed' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : booking.status === 'pending' || booking.status === 'pending_payment'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        : booking.status === 'in_review'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
-                    }`}>
-                      {booking.status === 'in_review' ? 'In review' : 
-                       booking.status.charAt(0).toUpperCase() + booking.status.slice(1).replace('_', ' ')}
-                    </span>
+                  <div className="text-right">
+                    <p className="font-medium">{formatPrice(booking.totalPrice)}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {booking.status}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-              No recent bookings found
+            <div className="text-center py-4 text-gray-500">
+              No recent bookings
             </div>
           )}
         </div>
       </div>
     </div>
   );
-};
-
-export default AdminDashboard;
+}

@@ -34,14 +34,17 @@ export const th = {
       reviews: 'รีวิว',
     },
     heroAlt: 'ภายนอกวิลล่าหรู',
-    experienceLuxury: 'สัมผัสประสบการณ์การพักผ่อนระดับหรู',
-    escapeDescription: 'หลบหนีความวุ่นวายสู่วิลล่าส่วนตัวของเรา สำหรับการพักผ่อนที่น่าจดจำในสวรรค์ เหมาะสำหรับครอบครัวและกลุ่มที่ต้องการความเป็นส่วนตัวและความสะดวกสบาย',
+    experienceLuxury: 'สัมผัสประสบการณ์ความหรูหราที่ไม่เคยมีมาก่อน',
+    escapeDescription: 'หลีกหนีสู่โลกแห่งความหรูหราและความสงบ',
     aboutTitle: 'เกี่ยวกับวิลล่า',
-    description: 'ตั้งอยู่ใจกลางสวรรค์ วิลล่าสุดหรูนี้นำเสนอความสมดุลที่ลงตัวระหว่างความหรูหราและความสะดวกสบาย ด้วยวิวทะเลที่งดงามและสิ่งอำนวยความสะดวกทันสมัย นี่คือที่พักในฝันของคุณ วิลล่ามีพื้นที่นั่งเล่นกว้างขวาง ครัวที่ครบครัน และสระว่ายน้ำส่วนตัวแบบอินฟินิตี้',
+    description: 'วิลล่าหรูพร้อมสิ่งอำนวยความสะดวกทันสมัยและวิวที่สวยงาม',
     location: 'ที่ตั้ง',
-    beachfront: 'ติดชายหาด',
+    beachfront: 'เข้าถึงชายหาดได้โดยตรง',
+    beachfrontTitle: 'ที่ตั้ง',
     capacity: 'รองรับได้',
-    maxGuests: 'สูงสุด 6 ท่าน',
+    maxGuests: 'จำนวนผู้เข้าพักสูงสุด',
+    guestsCount: 'รองรับผู้เข้าพักได้สูงสุด {{count}} ท่าน',
+    guestsCount_other: 'รองรับผู้เข้าพักได้สูงสุด {{count}} ท่าน',
     size: 'ขนาด',
     sqm: 'ตร.ม.',
     interiorAlt: 'ภายในวิลล่า',
@@ -66,6 +69,12 @@ export const th = {
       verified: 'ยืนยันการเข้าพักแล้ว',
       readMore: 'อ่านรีวิวเพิ่มเติม',
     },
+    bedrooms: 'ห้องนอน',
+    bedroomsCount: '{{count}} ห้องนอน',
+    bedroomsCount_other: '{{count}} ห้องนอน',
+    bathrooms: 'ห้องน้ำ',
+    bathroomsCount: '{{count}} ห้องน้ำ',
+    bathroomsCount_other: '{{count}} ห้องน้ำ',
   },
   booking: {
     selectDates: 'เลือกวันที่',
@@ -79,7 +88,6 @@ export const th = {
         title: 'ข้อมูลส่วนตัว',
         description: 'กรอกข้อมูลติดต่อของคุณ',
       },
-
       payment: {
         title: 'การชำระเงิน',
         description: 'เลือกวิธีการชำระเงิน',
@@ -113,8 +121,7 @@ export const th = {
     success: {
       customerInfo: 'บันทึกข้อมูลผู้จองเรียบร้อยแล้ว',
       confirmed: 'การชำระเงินถูกยืนยันเรียบร้อยแล้ว',
-      created  : 'กรุณากรอกข้อมูลการจอง',
-
+      created: 'กรุณากรอกข้อมูลการจอง',
     },
     customerInfo: {
       title: 'ข้อมูลผู้จอง',
@@ -162,7 +169,6 @@ export const th = {
         maxSize: 'ขนาดไฟล์สูงสุด: 5MB',
       },
     },
-
     confirmation: {
       title: 'ยืนยันการจอง',
       subtitle: 'กรุณาตรวจสอบรายละเอียดการจองของคุณ',
@@ -218,7 +224,6 @@ export const th = {
       selectFile: 'เลือกไฟล์',
       remove: 'ลบ',
     },
-
   },
   payment: {
     success: {
@@ -244,4 +249,23 @@ export const th = {
     logout: 'ออกจากระบบ',
     adminAccess: 'สำหรับผู้ดูแลระบบ',
   },
+  admin: {
+    villa: {
+      title: 'ตั้งค่าวิลล่า',
+      saved: 'บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว',
+      error: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+      dashboard: 'แดชบอร์ด',
+      bookings: 'การจอง',
+      calendar: 'ปฏิทิน',
+      settings: 'ตั้งค่า',
+      addVilla: 'เพิ่มวิลล่า',
+      editVilla: 'แก้ไขวิลล่า',
+      deleteVilla: 'ลบวิลล่า',
+      villaList: 'รายวิลล่า',
+      villaDetails: 'รายละเอียดวิลล่า',
+      villaPhotos: 'รูปภาพวิลล่า',
+      villaAmenities: 'สิ่งอำนวยความสะดวกวิลล่า',
+      villaReviews: 'รีวิววิลล่า',
+    }
+  }
 };

@@ -20,6 +20,64 @@ export interface BookingData {
   status: 'pending' | 'confirmed' | 'cancelled';
 }
 
+// Villa API functions
+export const villaApi = {
+  // Fetch villa details
+  async getVillaDetails() {
+    const response = await api.get('/admin/villa');
+    return response.data;
+  },
+
+  // Update villa details
+  async updateVillaDetails(data: any) {
+    const response = await api.patch('/admin/villa', data);
+    return response.data;
+  },
+
+  // Upload PromptPay QR
+  async uploadPromptPayQR(formData: FormData) {
+    const response = await api.post('/admin/villa/promptpay-qr', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Delete PromptPay QR
+  async deletePromptPayQR() {
+    const response = await api.delete('/admin/villa/promptpay-qr');
+    return response.data;
+  },
+
+  // Upload background image
+  async uploadBackgroundImage(formData: FormData) {
+    const response = await api.patch('/admin/villa/background', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Upload slide images
+  async uploadSlideImages(formData: FormData) {
+    const response = await api.post('/admin/villa/slides', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Delete slide image
+  async deleteSlideImage(filename: string) {
+    const response = await api.delete(`/admin/villa/slides/${filename}`);
+    return response.data;
+  }
+};
+
+// Booking API functions
 export const bookingApi = {
   createBooking: async (bookingData: BookingData) => {
     try {
@@ -80,5 +138,7 @@ export const bookingApi = {
       }
       throw error;
     }
-  }
+  },
 };
+
+export default api;

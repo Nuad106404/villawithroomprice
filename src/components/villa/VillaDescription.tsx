@@ -1,8 +1,11 @@
-import React from 'react';
-import { MapPin, Users, Home, Star } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { MapPin, Users, Home, Star, Waves, Users2, Bath, BedDouble } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { motion } from 'framer-motion';
 import { VillaSlideshow } from './VillaSlideshow';
+import { fetchVillaDetails } from '../../store/slices/villaSlice';
 
 const container = {
   hidden: { opacity: 0 },
@@ -21,7 +24,25 @@ const item = {
 };
 
 export function VillaDescription() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
+  const { villa } = useSelector((state: RootState) => state.villa);
+
+  useEffect(() => {
+    dispatch(fetchVillaDetails());
+  }, [dispatch]);
+
+  const getVillaBeachfront = () => {
+    if (!villa?.beachfront) return t('villa.beachfront');
+    const currentLang = i18n.language as 'en' | 'th';
+    return villa.beachfront[currentLang] || villa.beachfront.en;
+  };
+
+  const getVillaDescription = () => {
+    if (!villa?.description) return t('villa.description');
+    const currentLang = i18n.language as 'en' | 'th';
+    return villa.description[currentLang] || villa.description.en;
+  };
 
   return (
     <div className="relative">
@@ -51,56 +72,68 @@ export function VillaDescription() {
           </div>
         </motion.div>
 
-        {/* Features Grid */}
-        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/30 p-8 hover:shadow-2xl transition-shadow duration-300">
-            <div className="relative z-10 flex flex-col h-full">
-              <MapPin className="w-8 h-8 text-amber-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        {/* Villa Details */}
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Beachfront */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm flex items-start space-x-4">
+            <MapPin className="w-8 h-8 text-amber-600 mb-4" />
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                 {t('villa.location')}
               </h3>
               <p className="text-gray-500 dark:text-gray-400 flex-grow">
-                {t('villa.beachfront')}
+                {getVillaBeachfront()}
               </p>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/10 dark:to-amber-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/30 p-8 hover:shadow-2xl transition-shadow duration-300">
-            <div className="relative z-10 flex flex-col h-full">
-              <Users className="w-8 h-8 text-amber-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {t('villa.capacity')}
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 flex-grow">
+          {/* Guests */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm flex items-start space-x-4">
+            <Users2 className="h-6 w-6 text-primary" />
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                 {t('villa.maxGuests')}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                {t('villa.guestsCount', { count: villa?.maxGuests || 6 })}
               </p>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/10 dark:to-amber-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
 
-          <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl dark:shadow-gray-900/30 p-8 hover:shadow-2xl transition-shadow duration-300">
-            <div className="relative z-10 flex flex-col h-full">
-              <Home className="w-8 h-8 text-amber-600 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {t('villa.size')}
+          {/* Bedrooms */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm flex items-start space-x-4">
+            <BedDouble className="h-6 w-6 text-primary" />
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                {t('villa.bedrooms')}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 flex-grow">
-                350 {t('villa.sqm')}
+              <p className="text-gray-500 dark:text-gray-400">
+                {t('villa.bedroomsCount', { count: villa?.bedrooms || 3 })}
               </p>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/10 dark:to-amber-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
+
+          {/* Bathrooms */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm flex items-start space-x-4">
+            <Bath className="h-6 w-6 text-primary" />
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                {t('villa.bathrooms')}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                {t('villa.bathroomsCount', { count: villa?.bathrooms || 3 })}
+              </p>
+            </div>
           </div>
         </motion.div>
 
         {/* Description Section */}
-        <motion.div 
-          variants={item} 
-          className="prose dark:prose-invert max-w-none bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/30 p-8 md:p-12"
-        >
-          <h2 className="text-3xl font-semibold mb-6">{t('villa.aboutTitle')}</h2>
+        <motion.div variants={item} className="mt-12">
+          <h2 className="text-3xl font-semibold mb-6">
+            {villa?.title?.[i18n.language as 'en' | 'th'] || villa?.title?.en || t('villa.aboutTitle')}
+          </h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
-            {t('villa.description')}
+            {getVillaDescription()}
           </p>
         </motion.div>
       </motion.div>

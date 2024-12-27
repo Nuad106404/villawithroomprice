@@ -11,8 +11,8 @@ import { Calendar } from '../ui/calendar';
 import { bookingApi } from '../../services/api';
 import { formatPrice } from '../../lib/utils';
 import cn from 'classnames';
-
-const pricePerNight = 299;
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 export function BookingCard() {
   const { t } = useTranslation();
@@ -20,12 +20,42 @@ export function BookingCard() {
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [guests, setGuests] = React.useState(2);
   const [isLoading, setIsLoading] = React.useState(false);
+  const villa = useSelector((state: RootState) => state.villa.villa);
+  const pricePerNight = villa?.pricePerNight || 0;
+  const discountedPrice = villa?.discountedPrice || 0;
+  const actualPrice = discountedPrice > 0 ? discountedPrice : pricePerNight;
+  const maxGuests = villa?.maxGuests || 4;
 
   const totalNights = date?.from && date?.to
     ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  const totalPrice = totalNights * pricePerNight;
+  const totalPrice = totalNights * actualPrice;
+
+  const formattedPricePerNight = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(pricePerNight);
+
+  const formattedDiscountedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(discountedPrice);
+
+  const formattedTotalPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(totalPrice);
+
+  const discountPercentage = discountedPrice > 0
+    ? Math.round(((pricePerNight - discountedPrice) / pricePerNight) * 100)
+    : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +81,7 @@ export function BookingCard() {
     }
 
     // Validate number of guests
-    if (guests < 1 || guests > 4) {
+    if (guests < 1 || guests > maxGuests) {
       toast.error(t('booking.errors.invalidGuests'));
       return;
     }
@@ -92,15 +122,60 @@ export function BookingCard() {
     >
       <div className="p-4 sm:p-6 md:p-8">
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-4 sm:gap-8 mb-6 sm:mb-8">
-          <div className="text-center sm:text-left">
-            <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent">
-              {formatPrice(pricePerNight)}
-            </span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">/ {t('common.perNight')}</span>
+          <div className="relative w-full sm:w-auto">
+            {/* Price Container with Artistic Background */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100 to-amber-50 dark:from-amber-900/20 dark:via-amber-800/20 dark:to-amber-900/20 p-4 sm:p-6">
+              {/* Decorative Elements */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_107%,rgba(253,230,138,0.3)_0%,rgba(251,191,36,0.1)_5%,rgba(217,119,6,0.05)_45%,rgba(180,83,9,0.1)_60%,transparent_70%)] dark:bg-[radial-gradient(circle_at_30%_107%,rgba(253,230,138,0.1)_0%,rgba(251,191,36,0.05)_5%,rgba(217,119,6,0.02)_45%,rgba(180,83,9,0.05)_60%,transparent_70%)]"></div>
+              <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-amber-500/10 dark:bg-amber-400/5 rounded-full blur-2xl"></div>
+              
+              {discountedPrice > 0 ? (
+                <div className="relative space-y-2">
+                  {/* Discount Badge */}
+                  <div className="absolute -right-2 -top-2 transform rotate-12">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-red-500 rounded-full blur-sm opacity-20"></div>
+                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm">
+                        -{discountPercentage}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Discounted Price */}
+                  <div className="flex flex-col items-center sm:items-start">
+                    <div className="relative">
+                      <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent tracking-tight">
+                        {formattedDiscountedPrice}
+                      </span>
+                      <span className="ml-2 text-sm text-amber-700/70 dark:text-amber-300/70">/ {t('common.perNight')}</span>
+                    </div>
+                    
+                    {/* Original Price with Strike Effect */}
+                    <div className="relative mt-1">
+                      <span className="text-base text-gray-500/80 dark:text-gray-400/80 line-through decoration-red-500/30 decoration-2">
+                        {formattedPricePerNight}
+                      </span>
+                      <div className="absolute -inset-x-1 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative flex flex-col items-center sm:items-start">
+                  <div className="relative">
+                    <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent tracking-tight">
+                      {formattedPricePerNight}
+                    </span>
+                    <span className="ml-2 text-sm text-amber-700/70 dark:text-amber-300/70">/ {t('common.perNight')}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-300">
             <Users className="w-5 h-5 mr-2" />
-            <span>{guests} {guests === 1 ? t('common.guest') : t('common.guests')}</span>
+            <span>
+              {guests} {t('common.guests')}
+            </span>
           </div>
         </div>
 
@@ -176,34 +251,76 @@ export function BookingCard() {
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center sm:text-left">
-              {t('booking.guests')}
+              {t('booking.guests')} ({t('common.max')} {maxGuests})
             </label>
-            <select
-              value={guests}
-              onChange={(e) => setGuests(Number(e.target.value))}
-              className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 transition-colors text-base sm:text-sm touch-manipulation"
-            >
-              {[1, 2, 3, 4].map((num) => (
-                <option key={num} value={num}>
-                  {num} {num === 1 ? t('common.guest') : t('common.guests')}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={guests}
+                onChange={(e) => setGuests(Number(e.target.value))}
+                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-400 transition-colors text-base sm:text-sm touch-manipulation"
+              >
+                {Array.from({ length: maxGuests }, (_, i) => i + 1).map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? t('common.guest') : t('common.guests')}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <Users className="h-4 w-4 text-gray-500" />
+              </div>
+            </div>
           </div>
 
           {totalNights > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
               className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700"
             >
-              <div className="flex justify-between text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                <span>{formatPrice(pricePerNight)} × {totalNights} {t('common.nights')}</span>
-                <span>{formatPrice(pricePerNight * totalNights)}</span>
-              </div>
+              {discountedPrice > 0 && (
+                <div className="flex justify-between text-sm sm:text-base">
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 line-through">{formattedPricePerNight} × {totalNights} {t('common.nights')}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {formattedDiscountedPrice} × {totalNights} {t('common.nights')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-gray-500 line-through">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'THB',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }).format(pricePerNight * totalNights)}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400">{formattedTotalPrice}</span>
+                  </div>
+                </div>
+              )}
+              {!discountedPrice && (
+                <div className="flex justify-between text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                  <span>{formattedPricePerNight} × {totalNights} {t('common.nights')}</span>
+                  <span>{formattedTotalPrice}</span>
+                </div>
+              )}
+              {discountedPrice > 0 && (
+                <div className="flex justify-between text-sm sm:text-base text-green-600">
+                  <span>{t('common.youSave')}</span>
+                  <span>
+                    {new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'THB',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }).format((pricePerNight - discountedPrice) * totalNights)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between font-semibold text-base sm:text-lg text-gray-900 dark:text-white">
                 <span>{t('common.total')}</span>
-                <span>{formatPrice(totalPrice)}</span>
+                <span>{formattedTotalPrice}</span>
               </div>
             </motion.div>
           )}

@@ -1,13 +1,13 @@
-import React, { ReactNode, useState } from 'react';
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { DashboardHeader } from './DashboardHeader';
 import { cn } from '../../lib/utils';
 
 interface DashboardLayoutProps {
-  children: ReactNode;
 }
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+export const DashboardLayout: React.FC<DashboardLayoutProps> = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -40,7 +40,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       <main className="pt-16 lg:pl-72">
         <div className="p-8">
           <div className="max-w-7xl mx-auto space-y-8">
-            {children}
+            <Outlet />
           </div>
         </div>
       </main>

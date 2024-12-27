@@ -1,6 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Booking from '../../models/Booking.js';
+import Villa from '../../models/Villa.js';
 
 const router = express.Router();
 
@@ -8,7 +9,16 @@ const router = express.Router();
 const validateInitialBooking = [
   body('bookingDetails.checkIn').isISO8601(),
   body('bookingDetails.checkOut').isISO8601(),
-  body('bookingDetails.guests').isInt({ min: 1 }),
+  body('bookingDetails.guests').isInt({ min: 1 }).custom(async (value) => {
+    const villa = await Villa.findOne();
+    if (!villa) {
+      throw new Error('Villa not found');
+    }
+    if (value > villa.maxGuests) {
+      throw new Error(`Number of guests cannot exceed villa capacity of ${villa.maxGuests}`);
+    }
+    return true;
+  }),
   body('bookingDetails.totalPrice').isFloat({ min: 0 }),
 ];
 
@@ -26,6 +36,18 @@ router.post('/', validateInitialBooking, async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Double-check villa capacity
+    const villa = await Villa.findOne();
+    if (!villa) {
+      return res.status(400).json({ message: 'Villa not found' });
+    }
+    
+    if (req.body.bookingDetails.guests > villa.maxGuests) {
+      return res.status(400).json({ 
+        message: `Number of guests cannot exceed villa capacity of ${villa.maxGuests}` 
+      });
     }
 
     const booking = new Booking({

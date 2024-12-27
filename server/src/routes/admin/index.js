@@ -1,7 +1,11 @@
 import express from 'express';
 import Booking from '../../models/Booking.js';
+import villaRoutes from './villa.js';
 
 const router = express.Router();
+
+// Mount villa routes
+router.use('/villa', villaRoutes);
 
 // Get dashboard stats
 router.get('/stats', async (req, res) => {

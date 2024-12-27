@@ -18,9 +18,11 @@ const PaymentMethod = lazy(() => import('./components/booking/PaymentMethod').th
 const BookingConfirmation = lazy(() => import('./components/booking/BookingConfirmation').then(module => ({ default: module.BookingConfirmation })));
 
 // Admin components
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(module => ({ default: module.default })));
-const AdminBookings = lazy(() => import('./pages/admin/AdminBookings').then(module => ({ default: module.AdminBookings })));
-const DashboardLayout = lazy(() => import('./components/admin/DashboardLayout').then(module => ({ default: module.DashboardLayout })));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminBookings = lazy(() => import('./pages/admin/AdminBookings'));
+const AdminVilla = lazy(() => import('./pages/admin/AdminVilla'));
+const AdminBank = lazy(() => import('./pages/admin/AdminBank'));
+const DashboardLayout = lazy(() => import('./components/admin/DashboardLayout').then(module => ({ default: module.default })));
 
 function HomePage() {
   return (
@@ -78,8 +80,12 @@ function AppContent() {
             <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
-            <Route path="/admin/bookings" element={<DashboardLayout><AdminBookings /></DashboardLayout>} />
+            <Route path="/admin" element={<DashboardLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="bank" element={<AdminBank />} />
+              <Route path="villa" element={<AdminVilla />} />
+              <Route path="bookings" element={<AdminBookings />} />
+            </Route>
             
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

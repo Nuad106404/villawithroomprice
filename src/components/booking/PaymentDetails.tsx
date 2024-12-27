@@ -1,87 +1,80 @@
 import React from 'react';
-import { CreditCard, Copy } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { Button } from '../ui/button';
 import { toast } from 'react-toastify';
+import { QRCode } from './QRCode';
 
 export function PaymentDetails() {
-  const bankDetails = [
-    {
-      bank: "Kasikorn Bank (KBank)",
-      accountNumber: "xxx-x-xxxxx-x",
-      accountName: "Your Company Name Co., Ltd.",
-      branch: "Central World Branch"
-    },
-    {
-      bank: "Bangkok Bank",
-      accountNumber: "xxx-x-xxxxx-x",
-      accountName: "Your Company Name Co., Ltd.",
-      branch: "Siam Paragon Branch"
-    },
-    {
-      bank: "SCB (Siam Commercial Bank)",
-      accountNumber: "xxx-x-xxxxx-x",
-      accountName: "Your Company Name Co., Ltd.",
-      branch: "EmQuartier Branch"
-    }
-  ];
+  const { t } = useTranslation();
+  const villa = useSelector((state: RootState) => state.villa.villa);
+  const bankDetails = villa?.bankDetails || [];
+  const booking = useSelector((state: RootState) => state.booking.booking);
+  const amount = booking?.totalAmount || 0;
 
-  const handleCopy = (text: string, type: string) => {
+  const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${type} copied to clipboard!`);
+    toast.success('Copied to clipboard!');
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-          <CreditCard className="w-5 h-5 mr-2 text-amber-500" />
-          Bank Transfer Details
-        </h3>
-      </div>
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="space-y-8">
 
-      <div className="space-y-6">
-        {bankDetails.map((bank) => (
-          <div 
-            key={bank.bank} 
-            className="p-4 rounded-xl border-2 border-gray-100 dark:border-gray-700 hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all duration-300"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
-                {bank.bank}
-              </h4>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {bank.branch}
-              </span>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Account Number</span>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium text-gray-900 dark:text-white">{bank.accountNumber}</span>
-                  <button
-                    onClick={() => handleCopy(bank.accountNumber, 'Account number')}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  >
-                    <Copy className="w-4 h-4 text-gray-500 hover:text-amber-500" />
-                  </button>
+
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Bank Transfer
+          </h3>
+          
+          <div className="space-y-4">
+            {bankDetails.map((bank, index) => (
+              <div
+                key={index}
+                className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4"
+              >
+                <div className="flex flex-col">
+                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                    {bank.bank}
+                  </h4>
                 </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Account Name</span>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium text-gray-900 dark:text-white">{bank.accountName}</span>
-                  <button
-                    onClick={() => handleCopy(bank.accountName, 'Account name')}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                  >
-                    <Copy className="w-4 h-4 text-gray-500 hover:text-amber-500" />
-                  </button>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Account Number
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {bank.accountNumber}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Account Name
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {bank.accountName}
+                    </span>
+                  </div>
                 </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => handleCopy(bank.accountNumber)}
+                >
+                  Copy Account Number
+                </Button>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          <p>Please transfer the full amount using either PromptPay QR Code or bank transfer. After making the transfer, you will need to upload the payment slip in the next step.</p>
+        </div>
       </div>
     </div>
   );

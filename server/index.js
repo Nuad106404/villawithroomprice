@@ -24,8 +24,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Serve uploaded files
-app.use('/uploads', express.static(join(__dirname, 'uploads')));
+// Serve static files
+app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 // Create uploads directory if it doesn't exist
 import fs from 'fs';

@@ -3,25 +3,35 @@ import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 interface QRCodeProps {
   amount: number;
-  promptpayId: string;
 }
 
-export function QRCode({ amount, promptpayId }: QRCodeProps) {
+export function QRCode({ amount }: QRCodeProps) {
+  const villa = useSelector((state: RootState) => state.villa.villa);
+  const qrImage = villa?.promptPay?.qrImage;
+
   // Ensure amount is a valid number
   const safeAmount = typeof amount === 'number' ? amount : 0;
 
   const handleDownload = () => {
+    if (!qrImage) return;
+    
     // Create a link element
     const link = document.createElement('a');
-    link.href = '/qr-code.svg';
-    link.download = 'promptpay-qr.svg';
+    link.href = qrImage;
+    link.download = 'promptpay-qr.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  if (!qrImage) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -42,7 +52,7 @@ export function QRCode({ amount, promptpayId }: QRCodeProps) {
         )}>
           <div className="relative w-full aspect-square bg-white rounded-lg overflow-hidden">
             <img
-              src="/qr-code.svg"
+              src={qrImage}
               alt="PromptPay QR Code"
               className="w-full h-full object-contain"
               style={{
@@ -55,7 +65,6 @@ export function QRCode({ amount, promptpayId }: QRCodeProps) {
           
           <div className="text-center space-y-2">
             <div className="text-sm text-gray-600 dark:text-gray-400">PromptPay</div>
-            <div className="font-mono text-sm sm:text-base text-gray-900 dark:text-white">{promptpayId}</div>
             <div className="text-lg font-semibold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent">
               {new Intl.NumberFormat('th-TH', {
                 style: 'currency',

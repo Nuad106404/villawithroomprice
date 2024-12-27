@@ -55,7 +55,7 @@ interface EditFormData {
   totalPrice: number;
 }
 
-export function AdminBookings() {
+export default function AdminBookings() {
   const dispatch = useDispatch<AppDispatch>();
   const { bookings, loading, error } = useSelector((state: RootState) => state.admin);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);

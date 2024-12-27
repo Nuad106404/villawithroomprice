@@ -29,7 +29,27 @@ const bookingSchema = new mongoose.Schema({
       type: Number,
       required: [true, 'Number of guests is required'],
       min: [1, 'Number of guests must be at least 1'],
-      max: [8, 'Number of guests cannot exceed 8']
+      validate: {
+        validator: async function(value) {
+          try {
+            // Get the Villa model
+            const Villa = mongoose.model('Villa');
+            
+            // Find the villa
+            const villa = await Villa.findOne();
+            if (!villa) {
+              return false;
+            }
+
+            // Check if guests exceed villa's maxGuests
+            return value <= villa.maxGuests;
+          } catch (error) {
+            console.error('Error validating guests:', error);
+            return false;
+          }
+        },
+        message: 'Number of guests cannot exceed villa capacity'
+      }
     },
     totalPrice: {
       type: Number,
@@ -57,7 +77,8 @@ const bookingSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   canExpire: {
     type: Boolean,
@@ -67,7 +88,7 @@ const bookingSchema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     default: function() {
-      return new Date(Date.now() + 60 * 1000); // 1 minute from now
+      return new Date(Date.now() + 60 * 60 * 1000);
     },
     index: true
   }

@@ -1,27 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { LanguageToggle } from '../ui/LanguageToggle';
-import { useTranslation } from 'react-i18next';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { fetchVillaDetails } from '../../store/slices/villaSlice';
 
-export function Header() {
-  const { t } = useTranslation();
+export const Header = () => {
+  const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
+  const { villa } = useSelector((state: RootState) => state.villa);
+
+  useEffect(() => {
+    dispatch(fetchVillaDetails());
+  }, [dispatch]);
+
+  const getVillaName = () => {
+    if (!villa) return t('common.villa');
+    const currentLang = i18n.language as 'en' | 'th';
+    return villa.name[currentLang] || villa.name.en;
+  };
 
   return (
-    <header className="fixed w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 
-                     border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-200">
-              {t('common.villa')}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <LanguageToggle />
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center">
+        <div className="mr-8">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-200">
+            {getVillaName()}
+          </h1>
+        </div>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <nav className="flex items-center space-x-2">
             <ThemeToggle />
-          </div>
+            <LanguageToggle />
+          </nav>
         </div>
       </div>
     </header>
   );
-}
+};

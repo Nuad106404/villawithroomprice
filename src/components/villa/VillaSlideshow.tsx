@@ -1,185 +1,88 @@
 import React, { useEffect, useCallback, useState, useRef, forwardRef } from 'react';
-import { motion, AnimatePresence, useAnimation, useMotionValue, useTransform, MotionValue } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Pause, Play, Maximize2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
-const villaImages = [
-  {
-    url: 'https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.interiorAlt',
-    title: 'villa.interiorTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1575517111478-7f6afd0973db?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.poolAlt',
-    title: 'villa.poolTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.exteriorAlt',
-    title: 'villa.exteriorTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1615571022219-eb45cf7faa9d?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.bedroomAlt',
-    title: 'villa.bedroomTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.livingRoomAlt',
-    title: 'villa.livingRoomTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1560448204-603b3fc33ddc?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.kitchenAlt',
-    title: 'villa.kitchenTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.patioAlt',
-    title: 'villa.patioTitle'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=80',
-    alt: 'villa.gardenAlt',
-    title: 'villa.gardenTitle'
-  }
-];
-
+// Constants for better maintainability
 const AUTOPLAY_INTERVAL = 5000;
-const TRANSITION_DURATION = 0.75;
+const SWIPE_THRESHOLD = 100;
+const MAX_SLIDES = 10;
 
 interface SlideProps {
   url: string;
   alt: string;
   title: string;
-  direction: number;
-  x: MotionValue<number>;
   index: number;
-  currentIndex: number;
   total: number;
+  isActive: boolean;
+  direction: number;
   isFullscreen: boolean;
-  onDragStart?: () => void;
-  onDragEnd?: (e: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => void;
+  onSlideClick?: () => void;
 }
-
-const MotionDiv = motion.div;
 
 const Slide = forwardRef<HTMLDivElement, SlideProps>(({
   url,
   alt,
   title,
-  direction,
-  x,
   index,
-  currentIndex,
   total,
+  isActive,
+  direction,
   isFullscreen,
-  onDragStart,
-  onDragEnd
+  onSlideClick
 }, ref) => {
-  const { t } = useTranslation();
-  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
-  
-  const clampedX = useTransform(x, (value) => {
-    return Math.max(-windowWidth, Math.min(windowWidth, value));
-  });
-  
-  const distance = useTransform(clampedX, [-windowWidth, 0, windowWidth], [100, 0, 100]);
-  const scale = useTransform(distance, [0, 100], [1, 0.85]);
-  const opacity = useTransform(distance, [0, 50, 100], [1, 0.25, 0], {
-    clamp: true
-  });
-  const rotate = useTransform(distance, [0, 100], [0, direction * 15]);
-  const blur = useTransform(distance, [0, 100], [0, 10]);
-  const translateY = useTransform(distance, [0, 100], [0, direction * 50]);
-
-  const getInitialX = () => {
-    if (index === currentIndex) return 0;
-    if (index === (currentIndex - 1 + total) % total) return -100;
-    if (index === (currentIndex + 1) % total) return 100;
-    return direction > 0 ? 100 : -100;
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+      scale: 0.95
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? '100%' : '-100%',
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    })
   };
 
   return (
-    <MotionDiv
+    <motion.div
       ref={ref}
-      style={{
-        x: clampedX,
-        scale,
-        opacity,
-        rotateY: rotate,
-        y: translateY,
-      }}
-      initial={{ 
-        x: getInitialX() + '%',
-        scale: 0.9,
-        opacity: 0,
-        rotateY: direction * 45,
-      }}
-      animate={{ 
-        x: 0,
-        scale: 1,
-        opacity: 1,
-        rotateY: 0,
-      }}
-      exit={{ 
-        x: direction > 0 ? '-100%' : '100%',
-        scale: 0.9,
-        opacity: 0,
-        rotateY: direction * -45,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 200,
-        damping: 25,
-        mass: 1,
-        restDelta: 0.001,
-      }}
-      className="absolute inset-0 will-change-transform perspective-1000"
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.7}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      className={cn(
+        "absolute inset-0",
+        "flex items-center justify-center"
+      )}
+      initial={{ opacity: 0, x: direction > 0 ? 1000 : -1000 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: direction > 0 ? -1000 : 1000 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
     >
-      <div className="absolute inset-0 perspective-2000 transform-gpu">
-        <motion.div 
-          className="relative h-full transform-gpu"
-          style={{
-            filter: useTransform(blur, value => `blur(${value}px)`),
-          }}
-        >
-          <img
-            src={url}
-            alt={t(alt)}
-            className={cn(
-              "h-full w-full transition-all duration-700",
-              isFullscreen ? "object-contain" : "object-cover",
-              "transform-gpu hover:scale-105"
-            )}
-            draggable={false}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            transition={{ 
-              duration: 0.8,
-              ease: [0.19, 1, 0.22, 1],
-              delay: 0.2 
-            }}
-            className="absolute bottom-8 left-8 max-w-xl"
-          >
-            <h2 className="text-3xl font-bold text-white mb-2 transform-gpu">
-              {t(title)}
-            </h2>
-          </motion.div>
-        </motion.div>
-      </div>
-    </MotionDiv>
+      <img
+        src={url}
+        className={cn(
+          "transition-all duration-300",
+          isFullscreen ? 
+            "max-h-screen max-w-screen object-contain" : 
+            "w-full h-full object-cover"
+        )}
+        draggable={false}
+      />
+    </motion.div>
   );
 });
 
@@ -187,256 +90,328 @@ Slide.displayName = 'Slide';
 
 export function VillaSlideshow() {
   const { t } = useTranslation();
+  const villa = useSelector((state: RootState) => state.villa.villa);
+  const [slides, setSlides] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [progressKey, setProgressKey] = useState(0);
-  const slideX = useMotionValue(0);
-  const autoplayTimeoutRef = useRef<NodeJS.Timeout>();
-  const dragStartX = useRef(0);
+  const slideShowRef = useRef<HTMLDivElement>(null);
+  const autoPlayTimerRef = useRef<number>();
+  const dragStartRef = useRef<number>(0);
 
-  const resetAutoplayTimer = useCallback(() => {
-    if (autoplayTimeoutRef.current) {
-      clearTimeout(autoplayTimeoutRef.current);
-    }
-    if (isAutoPlaying && !isDragging) {
-      autoplayTimeoutRef.current = setTimeout(() => {
-        handleNext();
-      }, AUTOPLAY_INTERVAL);
-    }
-  }, [isAutoPlaying, isDragging]);
-
-  const handlePrevious = useCallback(() => {
-    if (!isDragging) {
-      setDirection(-1);
-      setCurrentIndex((prev) => (prev === 0 ? villaImages.length - 1 : prev - 1));
-      resetAutoplayTimer();
-    }
-  }, [isDragging, resetAutoplayTimer]);
-
-  const handleNext = useCallback(() => {
-    if (!isDragging) {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev === villaImages.length - 1 ? 0 : prev + 1));
-      resetAutoplayTimer();
-    }
-  }, [isDragging, resetAutoplayTimer]);
-
+  // Load slides from villa data
   useEffect(() => {
-    resetAutoplayTimer();
-    return () => {
-      if (autoplayTimeoutRef.current) {
-        clearTimeout(autoplayTimeoutRef.current);
+    if (villa?.slideImages && villa.slideImages.length > 0) {
+      setSlides(villa.slideImages.slice(0, MAX_SLIDES));
+    }
+  }, [villa]);
+
+  // Handle auto-play with cleanup
+  useEffect(() => {
+    const startAutoPlay = () => {
+      if (isPlaying && !isDragging && slides.length > 1) {
+        autoPlayTimerRef.current = window.setTimeout(() => {
+          setDirection(1);
+          setCurrentIndex((prev) => (prev + 1) % slides.length);
+        }, AUTOPLAY_INTERVAL);
       }
     };
-  }, [isAutoPlaying, currentIndex, resetAutoplayTimer]);
 
-  const handleDragStart = () => {
-    setIsDragging(true);
-    dragStartX.current = slideX.get();
-    if (autoplayTimeoutRef.current) {
-      clearTimeout(autoplayTimeoutRef.current);
-    }
-  };
+    const cleanup = () => {
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current);
+      }
+    };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
-    setIsDragging(false);
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
-    const swipe = Math.abs(offset) * velocity;
-    
-    if (swipe < -10000 || offset < -100) {
-      handleNext();
-    } else if (swipe > 10000 || offset > 100) {
-      handlePrevious();
-    }
-    resetAutoplayTimer();
-  };
+    cleanup();
+    startAutoPlay();
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') handlePrevious();
-    if (e.key === 'ArrowRight') handleNext();
-    if (e.key === 'Escape') setIsFullscreen(false);
-  }, [handleNext, handlePrevious]);
+    return cleanup;
+  }, [isPlaying, isDragging, currentIndex, slides.length]);
 
+  // Handle keyboard navigation
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevious(e);
+      } else if (e.key === 'ArrowRight') {
+        handleNext(e);
+      } else if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        setIsPlaying(prev => !prev);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, [isFullscreen]);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const handleNext = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDragging && slides.length > 1) {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }
+  }, [isDragging, slides.length]);
+
+  const handlePrevious = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isDragging && slides.length > 1) {
+      setDirection(-1);
+      setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    }
+  }, [isDragging, slides.length]);
+
+  const handleDragStart = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setIsPlaying(false);
+    dragStartRef.current = e.clientX;
+  }, []);
+
+  const handleDragEnd = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    setIsPlaying(true);
+    
+    const dragDistance = e.clientX - dragStartRef.current;
+    if (Math.abs(dragDistance) > SWIPE_THRESHOLD) {
+      if (dragDistance > 0) {
+        setDirection(-1);
+        setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+      } else {
+        setDirection(1);
+        setCurrentIndex((prev) => (prev + 1) % slides.length);
+      }
+    }
+  }, [isDragging, slides.length]);
+
+  const handlePlayPause = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPlaying(prev => !prev);
+  }, []);
+
+  const handleFullscreen = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!slideShowRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await slideShowRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  }, []);
+
+  const handleThumbnailClick = useCallback((index: number) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+  }, [currentIndex]);
+
+  // Don't render if no slides
+  if (!slides.length) return null;
 
   return (
-    <div className={cn(
-      "relative overflow-hidden rounded-2xl bg-gradient-to-b from-gray-900/5 to-gray-900/20 dark:from-gray-800/5 dark:to-gray-800/20 z-10",
-      isFullscreen && "fixed inset-0 z-50 rounded-none bg-black"
-    )}>
-      <div className={cn(
-        "aspect-[16/9] md:aspect-[21/9] w-full relative perspective-2000",
-        isFullscreen && "h-full aspect-auto"
-      )}>
-        <motion.div 
-          className="relative h-full transform-gpu"
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="relative h-full">
-            <AnimatePresence initial={false} mode="popLayout">
-              {villaImages.map((image, index) => (
-                index === currentIndex && (
-                  <Slide
-                    key={index}
-                    url={image.url}
-                    alt={image.alt}
-                    title={image.title}
-                    direction={direction}
-                    x={slideX}
-                    index={index}
-                    currentIndex={currentIndex}
-                    total={villaImages.length}
-                    isFullscreen={isFullscreen}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                  />
-                )
+    <div
+      ref={slideShowRef}
+      className={cn(
+        "relative overflow-hidden rounded-lg bg-black/90 transition-all duration-500 ease-in-out",
+        "w-full max-w-[100vw] mx-auto",
+        isFullscreen ? 
+          "fixed inset-0 z-[100] m-0 h-screen w-screen rounded-none" : 
+          "aspect-video max-h-[80vh]"
+      )}
+    >
+      <div
+        className={cn(
+          "relative h-full w-full transition-all duration-300",
+          isFullscreen ? "flex items-center justify-center" : "aspect-video"
+        )}
+        onPointerDown={handleDragStart}
+        onPointerUp={handleDragEnd}
+        onPointerLeave={handleDragEnd}
+      >
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <Slide
+            key={currentIndex}
+            url={slides[currentIndex]}
+            index={currentIndex}
+            total={slides.length}
+            isActive={true}
+            direction={direction}
+            isFullscreen={isFullscreen}
+          />
+        </AnimatePresence>
+
+        {/* Controls Overlay */}
+        <div className={cn(
+          "absolute inset-0 transition-opacity duration-300",
+          "opacity-0 hover:opacity-100 touch-none",
+          "sm:p-4 md:p-6 lg:p-8",
+          isFullscreen && "lg:p-12"
+        )}>
+          {/* Navigation Arrows */}
+          <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-auto">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handlePrevious}
+              className={cn(
+                "pointer-events-auto rounded-full z-10",
+                "bg-black/40 hover:bg-black/60 transition-all",
+                "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14",
+                "flex items-center justify-center",
+                "mx-1 sm:mx-3 md:mx-4 lg:mx-6",
+                isFullscreen && "lg:w-16 lg:h-16"
+              )}
+            >
+              <ChevronLeft className={cn(
+                "transition-transform",
+                "w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7",
+                "text-white/90 hover:text-white"
+              )} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleNext}
+              className={cn(
+                "pointer-events-auto rounded-full z-10",
+                "bg-black/40 hover:bg-black/60 transition-all",
+                "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14",
+                "flex items-center justify-center",
+                "mx-1 sm:mx-3 md:mx-4 lg:mx-6",
+                isFullscreen && "lg:w-16 lg:h-16"
+              )}
+            >
+              <ChevronRight className={cn(
+                "transition-transform",
+                "w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7",
+                "text-white/90 hover:text-white"
+              )} />
+            </motion.button>
+          </div>
+
+          {/* Top Right Controls */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 sm:gap-3 pointer-events-auto">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handlePlayPause}
+              className={cn(
+                "rounded-full z-10",
+                "bg-black/40 hover:bg-black/60 transition-all",
+                "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12",
+                "flex items-center justify-center"
+              )}
+            >
+              {isPlaying ? 
+                <Pause className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white/90 hover:text-white" /> : 
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white/90 hover:text-white" />
+              }
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleFullscreen}
+              className={cn(
+                "rounded-full z-10",
+                "bg-black/40 hover:bg-black/60 transition-all",
+                "w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12",
+                "flex items-center justify-center"
+              )}
+            >
+              {isFullscreen ? 
+                <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white/90 hover:text-white" /> : 
+                <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white/90 hover:text-white" />
+              }
+            </motion.button>
+          </div>
+
+          {/* Bottom Controls */}
+          <div className={cn(
+            "absolute bottom-0 inset-x-0 pointer-events-auto",
+            "py-4"
+          )}>
+            {/* Slide Counter
+            <div className="text-center text-white/90 font-medium text-sm sm:text-base">
+              <span className="text-white">{currentIndex + 1}</span>
+              <span className="mx-1 text-white/60">/</span>
+              <span className="text-white/60">{slides.length}</span>
+            </div> */}
+
+            {/* Thumbnails */}
+            <div className={cn(
+              "flex flex-wrap items-center justify-center gap-1 sm:gap-2",
+              "sm:grid sm:grid-cols-2 md:flex md:flex-nowrap",
+              "mt-2 px-2"
+            )}>
+              {slides.map((slide, index) => (
+                <motion.button
+                  key={slide}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleThumbnailClick(index)}
+                  className={cn(
+                    "relative flex-none group",
+                    "focus:outline-none focus:ring-2 focus:ring-white/50",
+                    "transition-transform duration-200"
+                  )}
+                >
+                  <div className={cn(
+                    "relative overflow-hidden rounded-md sm:rounded-lg",
+                    "transform transition-all duration-300"
+                  )}>
+                    <img
+                      src={slide}
+                      alt={`Thumbnail ${index + 1}`}
+                      className={cn(
+                        "object-cover transition-all duration-300",
+                        "w-16 h-12 sm:w-20 sm:h-16 md:w-24 md:h-18 lg:w-28 lg:h-20",
+                        isFullscreen && "lg:w-32 lg:h-24",
+                        currentIndex === index 
+                          ? "opacity-100 scale-105" 
+                          : "opacity-50 hover:opacity-75"
+                      )}
+                      draggable={false}
+                    />
+                  </div>
+                  {currentIndex === index && (
+                    <motion.div
+                      layoutId="activeThumb"
+                      className={cn(
+                        "absolute inset-0 rounded-md sm:rounded-lg",
+                        "ring-2 ring-white shadow-lg",
+                        "transition-all duration-300"
+                      )}
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                </motion.button>
               ))}
-            </AnimatePresence>
-          </div>
-
-          {/* Controls */}
-          <div className="absolute bottom-4 right-4 flex items-center space-x-2 z-20">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setIsAutoPlaying(!isAutoPlaying);
-                resetAutoplayTimer();
-              }}
-              className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md transition-colors hover:bg-white/30"
-            >
-              {isAutoPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="rounded-full bg-black/40 p-2 text-white backdrop-blur-md transition-colors hover:bg-white/30"
-            >
-              {isFullscreen ? <X className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </motion.button>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            onClick={handlePrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50 z-20"
-            aria-label={t('Previous image')}
-            title={t('Previous image')}
-          >
-            <ChevronLeft className="h-6 w-6 transition-transform duration-200 group-hover:-translate-x-0.5" />
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.3)" }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-3 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus-visible:ring-2 focus-visible:ring-white/50 disabled:opacity-50 z-20"
-            aria-label={t('Next image')}
-            title={t('Next image')}
-          >
-            <ChevronRight className="h-6 w-6 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </motion.button>
-
-          {/* Image counter */}
-          <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-white text-sm backdrop-blur-sm z-20">
-            {currentIndex + 1} / {villaImages.length}
-          </div>
-
-          {/* Progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20 overflow-hidden backdrop-blur-sm">
-            <motion.div
-              key={`progress-${progressKey}-${currentIndex}`}
-              className="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600"
-              initial={{ scaleX: 0, opacity: 0 }}
-              animate={isAutoPlaying ? { 
-                scaleX: 1, 
-                opacity: 1,
-                transition: {
-                  duration: AUTOPLAY_INTERVAL / 1000,
-                  ease: "linear",
-                  opacity: { duration: 0.3 }
-                }
-              } : { 
-                scaleX: 0,
-                opacity: 0,
-                transition: { duration: 0.3 }
-              }}
-              style={{
-                originX: 0,
-                transformOrigin: "left",
-              }}
-            />
-            <motion.div
-              className="absolute top-0 left-0 right-0 h-full bg-gradient-to-r from-white/20 to-transparent"
-              initial={{ x: "-100%" }}
-              animate={{ x: "100%" }}
-              transition={{
-                duration: 2,
-                ease: "linear",
-                repeat: Infinity,
-                repeatType: "loop"
-              }}
-            />
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Thumbnails */}
-      <div className={cn(
-        "flex space-x-2 p-4 overflow-x-auto scrollbar-hide",
-        isFullscreen && "absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm"
-      )}>
-        {villaImages.map((image, index) => (
-          <motion.button
-            key={image.url}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              setDirection(index > currentIndex ? 1 : -1);
-              setCurrentIndex(index);
-              setProgressKey(prev => prev + 1);
-              resetAutoplayTimer();
-            }}
-            className="relative flex-none group"
-          >
-            <div className="relative overflow-hidden rounded-lg">
-              <img
-                src={image.url}
-                alt={t(image.alt)}
-                className={cn(
-                  'h-16 w-24 object-cover transition-all duration-300 group-hover:scale-110',
-                  currentIndex === index ? 'opacity-100' : 'opacity-50'
-                )}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             </div>
-            {currentIndex === index && (
-              <motion.div
-                layoutId="activeThumb"
-                className="absolute inset-0 rounded-lg ring-2 ring-amber-600"
-                transition={{ duration: 0.2 }}
-              />
-            )}
-          </motion.button>
-        ))}
+          </div>
+        </div>
       </div>
     </div>
   );
