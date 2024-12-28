@@ -24,6 +24,32 @@ const promptPaySchema = new mongoose.Schema({
   }
 });
 
+const roomSchema = new mongoose.Schema({
+  name: {
+    th: {
+      type: String,
+      trim: true
+    },
+    en: {
+      type: String,
+      trim: true
+    }
+  },
+  description: {
+    th: {
+      type: String,
+      trim: true
+    },
+    en: {
+      type: String,
+      trim: true
+    }
+  },
+  images: [{
+    type: String
+  }]
+});
+
 const villaSchema = new mongoose.Schema({
   name: {
     en: {
@@ -58,6 +84,16 @@ const villaSchema = new mongoose.Schema({
     th: {
       type: String,
       required: [true, 'Thai description is required'],
+      trim: true
+    }
+  },
+  address: {
+    en: {
+      type: String,
+      trim: true
+    },
+    th: {
+      type: String,
       trim: true
     }
   },
@@ -113,6 +149,7 @@ const villaSchema = new mongoose.Schema({
   slideImages: [{
     type: String
   }],
+  rooms: [roomSchema],
   isActive: {
     type: Boolean,
     default: true
@@ -137,6 +174,10 @@ villaSchema.statics.ensureDefaultVilla = async function() {
       description: {
         en: 'Experience luxury living by the beach',
         th: 'สัมผัสประสบการณ์การพักผ่อนสุดหรูริมทะเล'
+      },
+      address: {
+        en: '123 Beach Road',
+        th: '123 ถนนริมทะเล'
       },
       bankDetails: [
         {

@@ -1,82 +1,85 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { Bed, Bath, Maximize } from 'lucide-react';
+import { villaApi } from '../../services/api';
 
-const rooms = [
-  {
-    id: 'master',
-    name: 'Master Suite',
-    description: 'Luxurious master bedroom with ocean view, king-size bed, and en-suite bathroom',
-    size: 45,
-    beds: 1,
-    baths: 1,
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80'
-  },
-  {
-    id: 'guest1',
-    name: 'Guest Room 1',
-    description: 'Spacious guest room with garden view, queen-size bed, and shared bathroom',
-    size: 35,
-    beds: 1,
-    baths: 1,
-    image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1600&q=80'
-  },
-  {
-    id: 'guest2',
-    name: 'Guest Room 2',
-    description: 'Cozy guest room with twin beds, perfect for children or friends',
-    size: 30,
-    beds: 2,
-    baths: 1,
-    image: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1600&q=80'
-  }
-];
+interface Room {
+  name: {
+    en: string;
+    th: string;
+  };
+  description: {
+    en: string;
+    th: string;
+  };
+  images: string[];
+}
 
 export function VillaRooms() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await villaApi.getVillaRooms();
+        setRooms(response.rooms);
+      } catch (err) {
+        console.error('Error fetching rooms:', err);
+        setError('Failed to load rooms');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading rooms...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rooms.map((room) => (
-          <motion.div
-            key={room.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden group hover:shadow-lg transition-shadow duration-300"
-          >
-            <div className="relative h-48 overflow-hidden">
-              <img
-                src={room.image}
-                alt={room.name}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {room.name}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {room.description}
-              </p>
-              <div className="flex items-center space-x-6 text-gray-500 dark:text-gray-400">
-                <div className="flex items-center space-x-2">
-                  <Bed className="w-4 h-4" />
-                  <span className="text-sm">{room.beds} {room.beds === 1 ? 'Bed' : 'Beds'}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Bath className="w-4 h-4" />
-                  <span className="text-sm">{room.baths} Bath</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Maximize className="w-4 h-4" />
-                  <span className="text-sm">{room.size} m²</span>
-                </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {rooms.map((room, index) => (
+          <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+            {room.images.length > 0 && (
+              <div className="relative">
+                <img
+                  src={room.images[0]}
+                  alt={room.name[i18n.language as 'en' | 'th']}
+                  className="w-full h-64 object-cover"
+                />
+                {room.images.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                    +{room.images.length - 1} more
+                  </div>
+                )}
               </div>
+            )}
+            <div className="p-6">
+              <h3 className="text-2xl font-semibold mb-4">
+                {room.name[i18n.language as 'en' | 'th']}
+              </h3>
+              <p className="text-gray-600">
+                {room.description[i18n.language as 'en' | 'th']}
+              </p>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>

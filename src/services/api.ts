@@ -35,7 +35,10 @@ export const villaApi = {
   },
 
   // Upload PromptPay QR
-  async uploadPromptPayQR(formData: FormData) {
+  uploadQRCode: async (file: File) => {
+    const formData = new FormData();
+    formData.append('qrImage', file);
+
     const response = await api.post('/admin/villa/promptpay-qr', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -45,13 +48,16 @@ export const villaApi = {
   },
 
   // Delete PromptPay QR
-  async deletePromptPayQR() {
+  deleteQRCode: async () => {
     const response = await api.delete('/admin/villa/promptpay-qr');
     return response.data;
   },
 
   // Upload background image
-  async uploadBackgroundImage(formData: FormData) {
+  uploadBackgroundImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('backgroundImage', file);
+
     const response = await api.patch('/admin/villa/background', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -61,7 +67,12 @@ export const villaApi = {
   },
 
   // Upload slide images
-  async uploadSlideImages(formData: FormData) {
+  uploadSlideImages: async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('slideImages', file);
+    });
+
     const response = await api.post('/admin/villa/slides', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -71,10 +82,56 @@ export const villaApi = {
   },
 
   // Delete slide image
-  async deleteSlideImage(filename: string) {
-    const response = await api.delete(`/admin/villa/slides/${filename}`);
+  deleteSlideImage: async (index: number) => {
+    const response = await api.delete(`/admin/villa/slides/${index}`);
     return response.data;
-  }
+  },
+
+  // Room management
+  addRoom: async (name: { th: string; en: string }, description: { th: string; en: string }, images: File[]) => {
+    const formData = new FormData();
+    formData.append('name', JSON.stringify(name));
+    formData.append('description', JSON.stringify(description));
+    images.forEach(file => {
+      formData.append('roomImages', file);
+    });
+
+    const response = await api.post('/admin/villa/rooms', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  updateRoom: async (index: number, name: { th: string; en: string }, description: { th: string; en: string }, images?: File[]) => {
+    const formData = new FormData();
+    formData.append('name', JSON.stringify(name));
+    formData.append('description', JSON.stringify(description));
+    if (images) {
+      images.forEach(file => {
+        formData.append('roomImages', file);
+      });
+    }
+
+    const response = await api.patch(`/admin/villa/rooms/${index}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  deleteRoom: async (index: number) => {
+    const response = await api.delete(`/admin/villa/rooms/${index}`);
+    return response.data;
+  },
+
+  // Villa rooms
+  getVillaRooms: async () => {
+    const response = await api.get('/villa/rooms');
+    return response.data;
+  },
 };
 
 // Booking API functions

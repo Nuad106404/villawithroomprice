@@ -8,6 +8,7 @@ import { dirname, join } from 'path';
 import publicBookingRoutes from './src/routes/public/bookings.js';
 import uploadRoutes from './src/routes/upload.js';
 import adminRoutes from './src/routes/admin/index.js';
+import villaRoutes from './src/routes/villa.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,14 +27,26 @@ app.use(cookieParser());
 
 // Serve static files
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
 
 // Create uploads directory if it doesn't exist
 import fs from 'fs';
-const uploadsDir = join(__dirname, 'uploads', 'slips');
+import path from 'path';
+
+const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  fs.mkdirSync(uploadsDir);
 }
+
+// Create subdirectories
+['slips', 'villa', 'rooms', 'QR'].forEach(dir => {
+  const subDir = path.join(uploadsDir, dir);
+  if (!fs.existsSync(subDir)) {
+    fs.mkdirSync(subDir, { recursive: true });
+  }
+});
+
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -44,6 +57,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/bookings', publicBookingRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/villa', villaRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

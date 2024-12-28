@@ -7,47 +7,26 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create uploads directories if they don't exist
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const slipsUploadDir = path.join(uploadsDir, 'slips');
-const villaUploadDir = path.join(uploadsDir, 'villa');
+// Create required directories
+const createUploadDirs = () => {
+  const dirs = [
+    path.join(__dirname, '../uploads/slips'),
+    path.join(__dirname, '../uploads/villa'),
+    path.join(__dirname, '../uploads/rooms'),
+    path.join(__dirname, '../uploads/QR')
+  ];
 
-// Create all necessary directories
-[uploadsDir, slipsUploadDir, villaUploadDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    console.log('Creating directory:', dir);
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
+};
 
-// Log the paths for debugging
-console.log('Uploads directory paths:');
-console.log('Base uploads dir:', uploadsDir);
-console.log('Slips dir:', slipsUploadDir);
-console.log('Villa dir:', villaUploadDir);
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Choose directory based on upload type
-    const uploadDir = file.fieldname === 'backgroundImage' || file.fieldname === 'slideImages' 
-      ? villaUploadDir 
-      : slipsUploadDir;
-    console.log('File field name:', file.fieldname);
-    console.log('Uploading to:', uploadDir);
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const filename = path.parse(file.originalname).name;
-    const finalFilename = `${filename}-${uniqueSuffix}${path.extname(file.originalname)}`;
-    console.log('Generated filename:', finalFilename);
-    cb(null, finalFilename);
-  }
-});
+createUploadDirs();
 
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
-  console.log('File mimetype:', file.mimetype);
   
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -56,10 +35,59 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-export const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-});
+// Configure storage for different upload types
+const storage = {
+  slips: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../uploads/slips'));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `${path.parse(file.originalname).name}-${uniqueSuffix}${ext}`);
+    }
+  }),
+  villa: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../uploads/villa'));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `${path.parse(file.originalname).name}-${uniqueSuffix}${ext}`);
+    }
+  }),
+  rooms: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../uploads/rooms'));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `${path.parse(file.originalname).name}-${uniqueSuffix}${ext}`);
+    }
+  }),
+  qr: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, '../uploads/QR'));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `${path.parse(file.originalname).name}-${uniqueSuffix}${ext}`);
+    }
+  })
+};
+
+const limits = {
+  fileSize: 5 * 1024 * 1024 // 5MB limit
+};
+
+const upload = {
+  slip: multer({ storage: storage.slips, fileFilter, limits }),
+  villa: multer({ storage: storage.villa, fileFilter, limits }),
+  rooms: multer({ storage: storage.rooms, fileFilter, limits }),
+  qr: multer({ storage: storage.qr, fileFilter, limits })
+};
+
+export default upload;

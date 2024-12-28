@@ -1,11 +1,10 @@
 import express from 'express';
 import Villa from '../../models/Villa.js';
-import { upload } from '../../../config/multer.mjs';
+import upload from '../../../config/multer.mjs';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,38 +19,16 @@ if (!fs.existsSync(villaUploadsDir)) {
 }
 
 // Create uploads directory for QR codes if it doesn't exist
-const qrUploadsDir = path.join(__dirname, '../../../uploads/QR');
+const qrUploadsDir = path.join(__dirname, '../../../public/uploads/QR');
 if (!fs.existsSync(qrUploadsDir)) {
   fs.mkdirSync(qrUploadsDir, { recursive: true });
 }
 
-// Configure multer for QR code upload
-const qrStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, qrUploadsDir);
-  },
-  filename: function (req, file, cb) {
-    const uniquePrefix = uuidv4();
-    cb(null, uniquePrefix + '-' + file.originalname);
-  }
-});
-
-const qrUpload = multer({
-  storage: qrStorage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Only image files are allowed!'));
-  }
-});
+// Create uploads directory for room images if it doesn't exist
+const roomUploadsDir = path.join(__dirname, '../../../public/uploads/rooms');
+if (!fs.existsSync(roomUploadsDir)) {
+  fs.mkdirSync(roomUploadsDir, { recursive: true });
+}
 
 // Get villa details
 router.get('/', async (req, res) => {
@@ -228,7 +205,7 @@ router.patch('/', async (req, res) => {
   }
 });
 
-router.patch('/background', upload.single('backgroundImage'), async (req, res) => {
+router.patch('/background', upload.villa.single('backgroundImage'), async (req, res) => {
   try {
     console.log('Received file upload request');
     console.log('File:', req.file);
@@ -246,7 +223,7 @@ router.patch('/background', upload.single('backgroundImage'), async (req, res) =
 
     // Delete old background image if it exists
     if (villa.backgroundImage) {
-      const oldImagePath = path.join(__dirname, '../../../uploads', villa.backgroundImage);
+      const oldImagePath = path.join(__dirname, '../../../uploads/villa', path.basename(villa.backgroundImage));
       console.log('Checking old image at:', oldImagePath);
       if (fs.existsSync(oldImagePath)) {
         console.log('Deleting old image');
@@ -254,21 +231,20 @@ router.patch('/background', upload.single('backgroundImage'), async (req, res) =
       }
     }
 
-    // Update the villa with the new background image path
-    const imageUrl = `/uploads/villa/${req.file.filename}`;
-    console.log('Setting new image URL:', imageUrl);
-    villa.backgroundImage = imageUrl;
+    // Update villa with new background image path
+    villa.backgroundImage = `/uploads/villa/${req.file.filename}`;
+    console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
     console.log('Villa updated successfully');
-    res.json({ message: 'Background image updated successfully', villa });
+    res.json({ message: 'Background image updated successfully', backgroundImage: villa.backgroundImage });
   } catch (error) {
     console.error('Error updating background image:', error);
     res.status(500).json({ message: 'Error updating background image', error: error.message });
   }
 });
 
-router.post('/background', upload.single('backgroundImage'), async (req, res) => {
+router.post('/background', upload.villa.single('backgroundImage'), async (req, res) => {
   try {
     console.log('Received file upload request');
     console.log('File:', req.file);
@@ -286,7 +262,7 @@ router.post('/background', upload.single('backgroundImage'), async (req, res) =>
 
     // Delete old background image if it exists
     if (villa.backgroundImage) {
-      const oldImagePath = path.join(__dirname, '../../../uploads', villa.backgroundImage);
+      const oldImagePath = path.join(__dirname, '../../../uploads/villa', path.basename(villa.backgroundImage));
       console.log('Checking old image at:', oldImagePath);
       if (fs.existsSync(oldImagePath)) {
         console.log('Deleting old image');
@@ -294,14 +270,13 @@ router.post('/background', upload.single('backgroundImage'), async (req, res) =>
       }
     }
 
-    // Update the villa with the new background image path
-    const imageUrl = `/uploads/villa/${req.file.filename}`;
-    console.log('Setting new image URL:', imageUrl);
-    villa.backgroundImage = imageUrl;
+    // Update villa with new background image path
+    villa.backgroundImage = `/uploads/villa/${req.file.filename}`;
+    console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
     console.log('Villa updated successfully');
-    res.json({ message: 'Background image updated successfully', villa });
+    res.json({ message: 'Background image updated successfully', backgroundImage: villa.backgroundImage });
   } catch (error) {
     console.error('Error updating background image:', error);
     res.status(500).json({ message: 'Error updating background image', error: error.message });
@@ -309,7 +284,7 @@ router.post('/background', upload.single('backgroundImage'), async (req, res) =>
 });
 
 // Handle slide images upload
-router.post('/slides', upload.array('slideImages', 10), async (req, res) => {
+router.post('/slides', upload.villa.array('slideImages', 10), async (req, res) => {
   try {
     console.log('Received slide images upload request');
     console.log('Files:', req.files);
@@ -329,25 +304,22 @@ router.post('/slides', upload.array('slideImages', 10), async (req, res) => {
     if (villa.slideImages && villa.slideImages.length > 0) {
       villa.slideImages.forEach(imagePath => {
         if (!imagePath) return;
-        const relativePath = imagePath.replace('/uploads/', '');
-        const fullPath = path.join(__dirname, '../../../uploads', relativePath);
-        console.log('Checking old image at:', fullPath);
-        if (fs.existsSync(fullPath)) {
+        const oldPath = path.join(__dirname, '../../../uploads/villa', path.basename(imagePath));
+        console.log('Checking old image at:', oldPath);
+        if (fs.existsSync(oldPath)) {
           console.log('Deleting old image');
-          fs.unlinkSync(fullPath);
+          fs.unlinkSync(oldPath);
         }
       });
     }
 
-    // Save new slide images
-    const imageUrls = req.files.map(file => `/uploads/villa/${file.filename}`);
-    console.log('New image URLs:', imageUrls);
-    
-    villa.slideImages = imageUrls;
+    // Update villa with new slide image paths
+    villa.slideImages = req.files.map(file => `/uploads/villa/${file.filename}`);
+    console.log('Setting new slide image URLs:', villa.slideImages);
     await villa.save();
 
     console.log('Villa updated successfully');
-    res.json({ message: 'Slide images updated successfully', villa });
+    res.json({ message: 'Slide images updated successfully', slideImages: villa.slideImages });
   } catch (error) {
     console.error('Error updating slide images:', error);
     res.status(500).json({ message: 'Error updating slide images', error: error.message });
@@ -371,11 +343,10 @@ router.delete('/slides/:index', async (req, res) => {
     // Delete the file
     const imagePath = villa.slideImages[index];
     if (imagePath) {
-      const relativePath = imagePath.replace('/uploads/', '');
-      const fullPath = path.join(__dirname, '../../../uploads', relativePath);
-      console.log('Deleting image at:', fullPath);
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
+      const oldPath = path.join(__dirname, '../../../uploads/villa', path.basename(imagePath));
+      console.log('Deleting image at:', oldPath);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
       }
     }
 
@@ -417,10 +388,10 @@ router.patch('/slides/reorder', async (req, res) => {
 });
 
 // Upload PromptPay QR code
-router.post('/promptpay-qr', qrUpload.single('qrCode'), async (req, res) => {
+router.post('/promptpay-qr', upload.qr.single('qrImage'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No QR code file uploaded' });
+      return res.status(400).json({ message: 'No QR code image uploaded' });
     }
 
     const villa = await Villa.findOne();
@@ -428,7 +399,7 @@ router.post('/promptpay-qr', qrUpload.single('qrCode'), async (req, res) => {
       return res.status(404).json({ message: 'Villa not found' });
     }
 
-    // Delete old QR code if it exists
+    // Delete old QR image if it exists
     if (villa.promptPay?.qrImage) {
       const oldPath = path.join(__dirname, '../../../uploads/QR', path.basename(villa.promptPay.qrImage));
       if (fs.existsSync(oldPath)) {
@@ -436,16 +407,15 @@ router.post('/promptpay-qr', qrUpload.single('qrCode'), async (req, res) => {
       }
     }
 
-    // Update villa with new QR code path
-    villa.promptPay = {
-      qrImage: `/uploads/QR/${req.file.filename}`
-    };
+    // Update villa with new QR image
+    if (!villa.promptPay) {
+      villa.promptPay = { qrImage: `/uploads/QR/${req.file.filename}` };
+    } else {
+      villa.promptPay.qrImage = `/uploads/QR/${req.file.filename}`;
+    }
     await villa.save();
 
-    res.json({ 
-      message: 'QR code uploaded successfully',
-      qrImage: villa.promptPay.qrImage 
-    });
+    res.json({ message: 'QR code uploaded successfully', qrImage: villa.promptPay.qrImage });
   } catch (error) {
     console.error('Error uploading QR code:', error);
     res.status(500).json({ message: 'Failed to upload QR code' });
@@ -474,6 +444,100 @@ router.delete('/promptpay-qr', async (req, res) => {
   } catch (error) {
     console.error('Error deleting QR code:', error);
     res.status(500).json({ message: 'Failed to delete QR code' });
+  }
+});
+
+// Add room
+router.post('/rooms', upload.rooms.array('roomImages', 10), async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const villa = await Villa.findOne();
+    
+    if (!villa) {
+      return res.status(404).json({ message: 'Villa not found' });
+    }
+
+    const images = req.files ? req.files.map(file => `/uploads/rooms/${file.filename}`) : [];
+    
+    villa.rooms.push({
+      name: JSON.parse(name),
+      description: JSON.parse(description),
+      images
+    });
+
+    await villa.save();
+    res.json({ message: 'Room added successfully', villa });
+  } catch (error) {
+    console.error('Error adding room:', error);
+    res.status(500).json({ message: 'Error adding room', error: error.message });
+  }
+});
+
+// Update room
+router.patch('/rooms/:index', upload.rooms.array('roomImages', 10), async (req, res) => {
+  try {
+    const { index } = req.params;
+    const { name, description } = req.body;
+    const villa = await Villa.findOne();
+    
+    if (!villa) {
+      return res.status(404).json({ message: 'Villa not found' });
+    }
+
+    if (!villa.rooms[index]) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Delete old images if new ones are uploaded
+    if (req.files && req.files.length > 0) {
+      villa.rooms[index].images.forEach(imagePath => {
+        const oldPath = path.join(__dirname, '../../../uploads/rooms', path.basename(imagePath));
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      });
+      villa.rooms[index].images = req.files.map(file => `/uploads/rooms/${file.filename}`);
+    }
+
+    villa.rooms[index].name = JSON.parse(name);
+    villa.rooms[index].description = JSON.parse(description);
+
+    await villa.save();
+    res.json({ message: 'Room updated successfully', villa });
+  } catch (error) {
+    console.error('Error updating room:', error);
+    res.status(500).json({ message: 'Error updating room', error: error.message });
+  }
+});
+
+// Delete room
+router.delete('/rooms/:index', async (req, res) => {
+  try {
+    const { index } = req.params;
+    const villa = await Villa.findOne();
+    
+    if (!villa) {
+      return res.status(404).json({ message: 'Villa not found' });
+    }
+
+    if (!villa.rooms[index]) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // Delete room images
+    villa.rooms[index].images.forEach(imagePath => {
+      const oldPath = path.join(__dirname, '../../../uploads/rooms', path.basename(imagePath));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    });
+
+    villa.rooms.splice(index, 1);
+    await villa.save();
+    res.json({ message: 'Room deleted successfully', villa });
+  } catch (error) {
+    console.error('Error deleting room:', error);
+    res.status(500).json({ message: 'Error deleting room', error: error.message });
   }
 });
 

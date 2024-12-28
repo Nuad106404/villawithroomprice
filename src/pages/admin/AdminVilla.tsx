@@ -12,6 +12,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { villaApi } from '../../services/api';
+import { X } from 'lucide-react';
 
 interface FormData {
   name: {
@@ -35,15 +36,21 @@ interface FormData {
   maxGuests: number;
   bedrooms: number;
   bathrooms: number;
-  bankDetails: Array<{
-    bank: string;
-    accountNumber: string;
-    accountName: string;
-  }>;
   backgroundImage?: string;
   newBackgroundImage?: File;
   slideImages: string[];
   newSlideImages?: FileList;
+  rooms: {
+    name: {
+      en: string;
+      th: string;
+    };
+    description: {
+      en: string;
+      th: string;
+    };
+    images: string[];
+  }[];
 }
 
 const defaultFormData: FormData = {
@@ -56,14 +63,8 @@ const defaultFormData: FormData = {
   maxGuests: 6,
   bedrooms: 3,
   bathrooms: 3,
-  bankDetails: [
-    {
-      bank: '',
-      accountNumber: '',
-      accountName: ''
-    }
-  ],
   slideImages: [],
+  rooms: []
 };
 
 export default function AdminVilla() {
@@ -74,6 +75,11 @@ export default function AdminVilla() {
   const [error, setError] = useState<string>('');
   const [promptPayQR, setPromptPayQR] = useState<File | null>(null);
   const [promptPayQRPreview, setPromptPayQRPreview] = useState('');
+  const [roomFormData, setRoomFormData] = useState({
+    name: { th: '', en: '' },
+    description: { th: '', en: '' },
+    images: [] as File[]
+  });
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -92,15 +98,9 @@ export default function AdminVilla() {
         maxGuests: villa.maxGuests || 6,
         bedrooms: villa.bedrooms || 3,
         bathrooms: villa.bathrooms || 3,
-        bankDetails: villa.bankDetails || [
-          {
-            bank: '',
-            accountNumber: '',
-            accountName: ''
-          }
-        ],
         backgroundImage: villa.backgroundImage,
         slideImages: villa.slideImages || [],
+        rooms: villa.rooms || []
       });
       setPromptPayQRPreview(villa.promptPay?.qrImage || '');
     }
@@ -128,46 +128,86 @@ export default function AdminVilla() {
     });
   };
 
-  const handleBackgroundImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBackgroundImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Store the file in formData without uploading
-    setFormData(prev => ({
-      ...prev,
-      newBackgroundImage: file
-    }));
-  };
-
-  const handleSlideImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    setFormData(prev => ({
-      ...prev,
-      newSlideImages: files
-    }));
-  };
-
-  const handleDeleteSlideImage = async (index: number) => {
+    setIsSubmitting(true);
     try {
-      const response = await axios.delete(`/admin/villa/slides/${index}`);
-      dispatch(setVilla(response.data.villa));
-      toast.success('Slide image deleted successfully');
+      const response = await villaApi.uploadBackgroundImage(file);
+      setFormData(prev => ({
+        ...prev,
+        backgroundImage: response.backgroundImage
+      }));
+      toast({
+        title: "Success",
+        description: "Background image updated successfully",
+        status: "success"
+      });
     } catch (error) {
-      console.error('Error deleting slide image:', error);
-      toast.error('Failed to delete slide image');
+      console.error('Error uploading background image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload background image",
+        status: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleReorderSlideImages = async (newOrder: number[]) => {
+  const handleSlideImagesChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsSubmitting(true);
     try {
-      const response = await axios.patch('/admin/villa/slides/reorder', { newOrder });
-      dispatch(setVilla(response.data.villa));
-      toast.success('Slide images reordered successfully');
+      const response = await villaApi.uploadSlideImages(Array.from(files));
+      setFormData(prev => ({
+        ...prev,
+        slideImages: response.slideImages
+      }));
+      toast({
+        title: "Success",
+        description: "Slide images uploaded successfully",
+        status: "success"
+      });
     } catch (error) {
-      console.error('Error reordering slide images:', error);
-      toast.error('Failed to reorder slide images');
+      console.error('Error uploading slide images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload slide images",
+        status: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteSlideImage = async (index: number) => {
+    if (!confirm('Are you sure you want to delete this slide image?')) return;
+
+    setIsSubmitting(true);
+    try {
+      await villaApi.deleteSlideImage(index);
+      setFormData(prev => ({
+        ...prev,
+        slideImages: prev.slideImages.filter((_, i) => i !== index)
+      }));
+      toast({
+        title: "Success",
+        description: "Slide image deleted successfully",
+        status: "success"
+      });
+    } catch (error) {
+      console.error('Error deleting slide image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete slide image",
+        status: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,28 +217,8 @@ export default function AdminVilla() {
     setError('');
 
     try {
-      // Validate bank details
-      const hasEmptyBankDetails = formData.bankDetails.some(
-        bank => !bank.bank || !bank.accountNumber || !bank.accountName
-      );
-
-      if (hasEmptyBankDetails) {
-        setError('All bank details fields are required');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Format bank details
-      const formattedBankDetails = formData.bankDetails.map(bank => ({
-        bank: bank.bank.trim(),
-        accountNumber: bank.accountNumber.trim(),
-        accountName: bank.accountName.trim()
-      }));
-
-      // Prepare form data
       const formDataToSubmit = {
         ...formData,
-        bankDetails: formattedBankDetails
       };
 
       const response = await axios.patch('/admin/villa', formDataToSubmit);
@@ -209,7 +229,6 @@ export default function AdminVilla() {
         // Update local state with formatted data
         setFormData(prev => ({
           ...prev,
-          bankDetails: formattedBankDetails
         }));
       }
     } catch (error: any) {
@@ -218,75 +237,6 @@ export default function AdminVilla() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleBankDetailsSubmit = async () => {
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      // Validate bank details
-      const hasEmptyBankDetails = formData.bankDetails.some(
-        bank => !bank.bank || !bank.accountNumber || !bank.accountName
-      );
-
-      if (hasEmptyBankDetails) {
-        setError('All bank details fields are required');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Format bank details
-      const formattedBankDetails = formData.bankDetails.map(bank => ({
-        bank: bank.bank.trim(),
-        accountNumber: bank.accountNumber.trim(),
-        accountName: bank.accountName.trim()
-      }));
-
-      // Update bank details
-      const response = await villaApi.updateBankDetails(formattedBankDetails);
-      
-      if (response.bankDetails) {
-        // Update local state with formatted data
-        setFormData(prev => ({
-          ...prev,
-          bankDetails: response.bankDetails
-        }));
-        toast.success('Bank details updated successfully');
-      }
-    } catch (error: any) {
-      console.error('Error updating bank details:', error);
-      const errorMessage = error.message || 'Error updating bank details';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleBankDetailsChange = (index: number, field: string, value: string) => {
-    const newBankDetails = [...formData.bankDetails];
-    newBankDetails[index] = {
-      ...newBankDetails[index],
-      [field]: value
-    };
-    handleInputChange('bankDetails', newBankDetails);
-  };
-
-  const addBankDetail = () => {
-    const newBankDetails = [...formData.bankDetails];
-    newBankDetails.push({
-      bank: '',
-      accountNumber: '',
-      accountName: ''
-    });
-    handleInputChange('bankDetails', newBankDetails);
-  };
-
-  const removeBankDetail = (index: number) => {
-    const newBankDetails = [...formData.bankDetails];
-    newBankDetails.splice(index, 1);
-    handleInputChange('bankDetails', newBankDetails);
   };
 
   const handlePromptPaySubmit = async (e: React.FormEvent) => {
@@ -337,6 +287,73 @@ export default function AdminVilla() {
     }
   };
 
+  const handleRoomSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await villaApi.addRoom(
+        roomFormData.name,
+        roomFormData.description,
+        roomFormData.images
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        rooms: response.villa.rooms
+      }));
+
+      // Reset room form
+      setRoomFormData({
+        name: { th: '', en: '' },
+        description: { th: '', en: '' },
+        images: []
+      });
+
+      toast({
+        title: "Success",
+        description: "Room added successfully",
+        status: "success"
+      });
+    } catch (error) {
+      console.error('Error adding room:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add room",
+        status: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteRoom = async (index: number) => {
+    if (!confirm('Are you sure you want to delete this room?')) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await villaApi.deleteRoom(index);
+      setFormData(prev => ({
+        ...prev,
+        rooms: response.villa.rooms
+      }));
+      toast({
+        title: "Success",
+        description: "Room deleted successfully",
+        status: "success"
+      });
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete room",
+        status: "error"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!villa && loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -357,14 +374,28 @@ export default function AdminVilla() {
             <div className="mb-6 p-4 border rounded-lg">
               <h2 className="text-xl font-semibold mb-4">Background Image</h2>
               <div className="flex items-center gap-4">
-                {(formData.backgroundImage || formData.newBackgroundImage) && (
-                  <img
-                    src={formData.newBackgroundImage 
-                      ? URL.createObjectURL(formData.newBackgroundImage)
-                      : formData.backgroundImage}
-                    alt="Villa background"
-                    className="w-32 h-32 object-cover rounded-lg"
-                  />
+                {formData.backgroundImage && (
+                  <div className="relative">
+                    <img
+                      src={formData.backgroundImage}
+                      alt="Villa background"
+                      className="w-32 h-32 object-cover rounded-lg"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          backgroundImage: ''
+                        }));
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
                 <div>
                   <input
@@ -377,6 +408,7 @@ export default function AdminVilla() {
                       file:text-sm file:font-semibold
                       file:bg-blue-50 file:text-blue-700
                       hover:file:bg-blue-100"
+                    disabled={isSubmitting}
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Recommended size: 1920x1080px. Max file size: 5MB
@@ -388,65 +420,47 @@ export default function AdminVilla() {
             {/* Slide Images Upload */}
             <div className="mb-6 p-4 border rounded-lg">
               <h2 className="text-xl font-semibold mb-4">Slide Images</h2>
-              
-              {/* Current Slide Images */}
-              {formData.slideImages && formData.slideImages.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                  {formData.slideImages.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={image}
-                        alt={`Slide ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <button
-                          type="button"
+              <div className="space-y-4">
+                {formData.slideImages && formData.slideImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {formData.slideImages.map((image, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={image}
+                          alt={`Slide ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2"
                           onClick={() => handleDeleteSlideImage(index)}
-                          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          disabled={isSubmitting}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                )}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleSlideImagesChange}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100"
+                    disabled={isSubmitting}
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    You can upload multiple images. Recommended size: 1920x1080px. Max file size: 5MB per image
+                  </p>
                 </div>
-              )}
-
-              {/* New Slide Images Preview */}
-              {formData.newSlideImages && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                  {Array.from(formData.newSlideImages).map((file, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`New slide ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Upload Input */}
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleSlideImagesChange}
-                  className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100"
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  You can upload multiple images. Recommended size: 1920x1080px. Max file size: 5MB each
-                </p>
               </div>
             </div>
 
@@ -660,96 +674,6 @@ export default function AdminVilla() {
               </p>
             </div>
 
-            {/* Bank Details Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Bank Details
-                </h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addBankDetail}
-                  disabled={formData.bankDetails.length >= 5}
-                >
-                  Add Bank
-                </Button>
-              </div>
-              
-              {formData.bankDetails.map((bank, index) => (
-                <div 
-                  key={index} 
-                  className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Bank #{index + 1}
-                    </h4>
-                    {formData.bankDetails.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeBankDetail(index)}
-                      >
-                        Remove
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`bank-${index}`}>Bank Name</Label>
-                      <Input
-                        id={`bank-${index}`}
-                        value={bank.bank}
-                        onChange={(e) => handleBankDetailsChange(index, 'bank', e.target.value)}
-                        placeholder="e.g., Kasikorn Bank (KBank)"
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`accountNumber-${index}`}>Account Number</Label>
-                      <Input
-                        id={`accountNumber-${index}`}
-                        value={bank.accountNumber}
-                        onChange={(e) => handleBankDetailsChange(index, 'accountNumber', e.target.value)}
-                        placeholder="xxx-x-xxxxx-x"
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`accountName-${index}`}>Account Name</Label>
-                      <Input
-                        id={`accountName-${index}`}
-                        value={bank.accountName}
-                        onChange={(e) => handleBankDetailsChange(index, 'accountName', e.target.value)}
-                        placeholder="Company Name Co., Ltd."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {error && (
-                <p className="text-sm text-red-500 mt-2">
-                  {error}
-                </p>
-              )}
-
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  onClick={handleBankDetailsSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Bank Details'}
-                </Button>
-              </div>
-            </div>
-
             {/* Main form submit button */}
             <div className="flex items-center justify-end space-x-4">
               <Button
@@ -761,6 +685,143 @@ export default function AdminVilla() {
               </Button>
             </div>
           </form>
+
+          {/* Rooms Section */}
+          <div className="mb-6 p-4 border rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Rooms</h2>
+            
+            {/* Current Rooms */}
+            {formData.rooms && formData.rooms.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {formData.rooms.map((room, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-semibold">{room.name.en}</h3>
+                        <p className="text-sm text-gray-600">{room.name.th}</p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteRoom(index)}
+                        disabled={isSubmitting}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {room.images && room.images.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        {room.images.map((image, imgIndex) => (
+                          <img
+                            key={imgIndex}
+                            src={image}
+                            alt={`Room ${index + 1} image ${imgIndex + 1}`}
+                            className="w-full h-32 object-cover rounded"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm">{room.description.en}</p>
+                      <p className="text-sm">{room.description.th}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add New Room Form */}
+            <form onSubmit={handleRoomSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="roomNameEn">Room Name (English)</Label>
+                  <Input
+                    id="roomNameEn"
+                    value={roomFormData.name.en}
+                    onChange={(e) => setRoomFormData(prev => ({
+                      ...prev,
+                      name: { ...prev.name, en: e.target.value }
+                    }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="roomNameTh">Room Name (Thai)</Label>
+                  <Input
+                    id="roomNameTh"
+                    value={roomFormData.name.th}
+                    onChange={(e) => setRoomFormData(prev => ({
+                      ...prev,
+                      name: { ...prev.name, th: e.target.value }
+                    }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="roomDescEn">Description (English)</Label>
+                  <textarea
+                    id="roomDescEn"
+                    value={roomFormData.description.en}
+                    onChange={(e) => setRoomFormData(prev => ({
+                      ...prev,
+                      description: { ...prev.description, en: e.target.value }
+                    }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="roomDescTh">Description (Thai)</Label>
+                  <textarea
+                    id="roomDescTh"
+                    value={roomFormData.description.th}
+                    onChange={(e) => setRoomFormData(prev => ({
+                      ...prev,
+                      description: { ...prev.description, th: e.target.value }
+                    }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="roomImages">Room Images</Label>
+                <input
+                  type="file"
+                  id="roomImages"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setRoomFormData(prev => ({
+                    ...prev,
+                    images: Array.from(e.target.files || [])
+                  }))}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                  required
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Upload multiple images of the room. Recommended size: 1920x1080px. Max file size: 5MB per image
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Adding Room...' : 'Add Room'}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       </Card>
     </div>
