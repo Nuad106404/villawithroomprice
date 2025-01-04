@@ -2,6 +2,7 @@ import React from 'react';
 import { Upload, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface SlipUploadProps {
   onUpload: (file: File) => void;
@@ -10,6 +11,7 @@ interface SlipUploadProps {
 }
 
 export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps) {
+  const { t } = useTranslation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +36,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-        Upload Payment Slip
+        {t('booking.slip.upload.title')}
       </h3>
 
       <AnimatePresence>
@@ -55,7 +57,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                   variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Select File
+                  {t('booking.slip.upload.selectFile')}
                 </Button>
                 <input
                   type="file"
@@ -66,7 +68,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                or drag and drop your payment slip here
+                {t('booking.slip.upload.dragAndDrop')}
               </p>
             </div>
           </motion.div>
@@ -82,7 +84,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                 <div className="flex-shrink-0">
                   <img
                     src={URL.createObjectURL(uploadedFile)}
-                    alt="Payment Slip Preview"
+                    alt={t('booking.slip.preview')}
                     className="h-16 w-16 object-cover rounded"
                   />
                 </div>
@@ -91,13 +93,14 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                     {uploadedFile.name}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} {t('booking.slip.fileSize')}
                   </p>
                 </div>
               </div>
               <button
                 onClick={onRemove}
                 className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                aria-label={t('booking.slip.remove')}
               >
                 <X className="h-5 w-5" />
               </button>

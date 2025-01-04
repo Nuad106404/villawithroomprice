@@ -66,6 +66,12 @@ export const villaApi = {
     return response.data;
   },
 
+  // Delete background image
+  deleteBackgroundImage: async () => {
+    const response = await api.delete('/admin/villa/background');
+    return response.data;
+  },
+
   // Upload slide images
   uploadSlideImages: async (files: File[]) => {
     const formData = new FormData();
@@ -195,6 +201,11 @@ export const bookingApi = {
       }
       throw error;
     }
+  },
+
+  deleteBooking: async (id: string) => {
+    const response = await api.delete(`/admin/bookings/${id}`);
+    return response.data;
   },
 };
 

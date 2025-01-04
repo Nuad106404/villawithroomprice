@@ -91,31 +91,60 @@ export default function AdminBank() {
 
   const handlePromptPaySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!promptPayQR) return;
+    if (!promptPayQR) {
+      toast.error(t('admin.bank.selectQR'));
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('qrCode', promptPayQR);
-      await villaApi.uploadPromptPayQR(formData);
+      await villaApi.uploadQRCode(promptPayQR);
+      toast.success(t('admin.bank.qrUpdated'));
       await dispatch(fetchVillaDetails() as any);
-      toast.success('PromptPay QR code updated successfully');
       setPromptPayQR(null);
+      // Reset the file input
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } catch (error) {
-      toast.error('Failed to update PromptPay QR code');
+      console.error('Error uploading QR code:', error);
+      toast.error(t('admin.bank.errorUploadingQR'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error(t('admin.bank.invalidFileType'));
+        return;
+      }
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(t('admin.bank.fileTooLarge'));
+        return;
+      }
+      setPromptPayQR(file);
+    }
+  };
+
   const handleDeletePromptPayQR = async () => {
+    if (!window.confirm(t('admin.bank.confirmDeleteQR'))) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await villaApi.deletePromptPayQR();
+      await villaApi.deleteQRCode();
+      toast.success(t('admin.bank.qrDeleted'));
       await dispatch(fetchVillaDetails() as any);
-      toast.success('QR code deleted successfully');
     } catch (error) {
-      toast.error('Failed to delete QR code');
+      console.error('Error deleting QR code:', error);
+      toast.error(t('admin.bank.errorDeletingQR'));
     } finally {
       setIsLoading(false);
     }
@@ -130,135 +159,136 @@ export default function AdminBank() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* Bank Details Form */}
-      <Card className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-8 p-6">
-          <div>
-            <h2 className="text-2xl font-bold mb-6">Bank Account Management</h2>
-
-            <div className="space-y-6 mb-8">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-semibold">Bank Accounts</h3>
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">{t('admin.bank.title')}</h1>
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Bank Details Form */}
+        <Card className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4">{t('admin.bank.bankDetails')}</h2>
+            
+            {formData.bankDetails.map((bank, index) => (
+              <div key={index} className="space-y-4 p-4 border rounded-lg relative">
                 <Button
                   type="button"
-                  onClick={handleAddBank}
-                  className="flex items-center gap-2"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={() => handleRemoveBank(index)}
                 >
-                  <Plus className="w-4 h-4" />
-                  Add Bank Account
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              </div>
 
-              {formData.bankDetails.map((bank, index) => (
-                <div key={index} className="space-y-4 p-4 border rounded-lg relative">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    onClick={() => handleRemoveBank(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`bank-${index}`}>Bank Name</Label>
-                      <Input
-                        id={`bank-${index}`}
-                        value={bank.bank}
-                        onChange={(e) => handleBankDetailsChange(index, 'bank', e.target.value)}
-                        placeholder="Enter bank name"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-number-${index}`}>Account Number</Label>
-                      <Input
-                        id={`account-number-${index}`}
-                        value={bank.accountNumber}
-                        onChange={(e) => handleBankDetailsChange(index, 'accountNumber', e.target.value)}
-                        placeholder="Enter account number"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`account-name-${index}`}>Account Name</Label>
-                      <Input
-                        id={`account-name-${index}`}
-                        value={bank.accountName}
-                        onChange={(e) => handleBankDetailsChange(index, 'accountName', e.target.value)}
-                        placeholder="Enter account name"
-                        required
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`bank-${index}`}>{t('admin.bank.bankName')}</Label>
+                  <Input
+                    id={`bank-${index}`}
+                    value={bank.bank}
+                    onChange={(e) => handleBankDetailsChange(index, 'bank', e.target.value)}
+                    required
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSaving} className="min-w-[120px]">
+                <div className="space-y-2">
+                  <Label htmlFor={`accountNumber-${index}`}>{t('admin.bank.accountNumber')}</Label>
+                  <Input
+                    id={`accountNumber-${index}`}
+                    value={bank.accountNumber}
+                    onChange={(e) => handleBankDetailsChange(index, 'accountNumber', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`accountName-${index}`}>{t('admin.bank.accountName')}</Label>
+                  <Input
+                    id={`accountName-${index}`}
+                    value={bank.accountName}
+                    onChange={(e) => handleBankDetailsChange(index, 'accountName', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleAddBank}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('admin.bank.addBank')}
+            </Button>
+
+            <Button type="submit" className="w-full" disabled={isSaving}>
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('common.saving')}
                 </>
               ) : (
-                'Save Changes'
+                t('common.save')
               )}
             </Button>
-          </div>
-        </form>
-      </Card>
+          </form>
+        </Card>
 
-      {/* Separate PromptPay Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 max-w-4xl mx-auto">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          PromptPay QR Code
-        </h3>
-        
-        <form onSubmit={handlePromptPaySubmit} className="space-y-6">
-          <div>
-            <Label>QR Code Image</Label>
-            <div className="mt-2 space-y-4">
+        {/* PromptPay QR Form */}
+        <Card className="p-6">
+          <form onSubmit={handlePromptPaySubmit} className="space-y-6">
+            <h2 className="text-xl font-semibold mb-4">{t('admin.bank.promptpayQR')}</h2>
+            
+            <div className="space-y-4">
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="qr-code">{t('admin.bank.uploadQR')}</Label>
+                <Input
+                  id="qr-code"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="cursor-pointer"
+                />
+              </div>
+
               {villa?.promptPay?.qrImage && (
-                <div className="relative w-48 h-48 mx-auto">
+                <div className="relative w-full max-w-sm">
                   <img
-                    src={villa.promptPay.qrImage}
-                    alt="Current PromptPay QR"
-                    className="w-full h-full object-contain"
+                    src={`${villa.promptPay.qrImage}`}
+                    alt="PromptPay QR"
+                    className="w-full h-auto rounded-lg"
                   />
                   <Button
                     type="button"
                     variant="destructive"
-                    size="sm"
-                    className="mt-2"
+                    size="icon"
+                    className="absolute -top-2 -right-2"
                     onClick={handleDeletePromptPayQR}
+                    disabled={isLoading}
                   >
-                    Delete QR Code
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               )}
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setPromptPayQR(e.target.files?.[0])}
-              />
             </div>
-          </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Updating...' : 'Update PromptPay QR'}
-          </Button>
-        </form>
+            <Button type="submit" className="w-full" disabled={isSubmitting || !promptPayQR}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('common.uploading')}
+                </>
+              ) : (
+                t('admin.bank.updateQR')
+              )}
+            </Button>
+          </form>
+        </Card>
       </div>
     </div>
   );

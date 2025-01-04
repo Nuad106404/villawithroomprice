@@ -68,20 +68,7 @@ router.get('/bookings', async (req, res) => {
   try {
     const bookings = await Booking.find()
       .sort({ createdAt: -1 });
-
-    // Format the bookings for the frontend
-    const formattedBookings = bookings.map(booking => ({
-      _id: booking._id,
-      customerName: `${booking.customerInfo.firstName} ${booking.customerInfo.lastName}`,
-      checkIn: booking.bookingDetails.checkIn,
-      checkOut: booking.bookingDetails.checkOut,
-      totalPrice: booking.bookingDetails.totalPrice,
-      status: booking.status,
-      createdAt: booking.createdAt,
-      guests: booking.bookingDetails.guests
-    }));
-
-    res.json(formattedBookings);
+    res.json(bookings);
   } catch (error) {
     console.error('Error fetching bookings:', error);
     res.status(500).json({ message: 'Failed to fetch bookings' });
@@ -93,7 +80,7 @@ router.patch('/bookings/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-
+    
     const booking = await Booking.findByIdAndUpdate(
       id,
       { status },
@@ -104,44 +91,25 @@ router.patch('/bookings/:id/status', async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Format the response
-    const formattedBooking = {
-      _id: booking._id,
-      customerName: `${booking.customerInfo.firstName} ${booking.customerInfo.lastName}`,
-      checkIn: booking.bookingDetails.checkIn,
-      checkOut: booking.bookingDetails.checkOut,
-      totalPrice: booking.bookingDetails.totalPrice,
-      status: booking.status,
-      createdAt: booking.createdAt,
-      guests: booking.bookingDetails.guests
-    };
-
-    res.json(formattedBooking);
+    res.json(booking);
   } catch (error) {
     console.error('Error updating booking status:', error);
     res.status(500).json({ message: 'Failed to update booking status' });
   }
 });
 
-// Update booking details
+// Update booking
 router.patch('/bookings/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { customerName, checkIn, checkOut, guests, totalPrice } = req.body;
+    const { customerInfo, bookingDetails } = req.body;
 
-    // Split customer name into first and last name
-    const [firstName, ...lastNameParts] = customerName.split(' ');
-    const lastName = lastNameParts.join(' ');
-
+    // Find and update the booking
     const booking = await Booking.findByIdAndUpdate(
       id,
       {
-        'customerInfo.firstName': firstName,
-        'customerInfo.lastName': lastName || '',
-        'bookingDetails.checkIn': checkIn,
-        'bookingDetails.checkOut': checkOut,
-        'bookingDetails.guests': guests,
-        'bookingDetails.totalPrice': totalPrice
+        customerInfo,
+        bookingDetails
       },
       { new: true }
     );
@@ -150,19 +118,7 @@ router.patch('/bookings/:id', async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Format the response
-    const formattedBooking = {
-      _id: booking._id,
-      customerName: `${booking.customerInfo.firstName} ${booking.customerInfo.lastName}`,
-      checkIn: booking.bookingDetails.checkIn,
-      checkOut: booking.bookingDetails.checkOut,
-      totalPrice: booking.bookingDetails.totalPrice,
-      status: booking.status,
-      createdAt: booking.createdAt,
-      guests: booking.bookingDetails.guests
-    };
-
-    res.json(formattedBooking);
+    res.json(booking);
   } catch (error) {
     console.error('Error updating booking:', error);
     res.status(500).json({ message: 'Failed to update booking' });

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { useCountdownTimer } from '../../hooks/useCountdownTimer';
+import { useTranslation } from 'react-i18next';
 
 interface CountdownTimerProps {
   startTime: Date;
@@ -10,6 +11,7 @@ interface CountdownTimerProps {
 
 export function CountdownTimer({ startTime, endTime, onExpire }: CountdownTimerProps) {
   const { hours, minutes, seconds, isExpired } = useCountdownTimer({ startTime, endTime });
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (isExpired && onExpire) {
@@ -32,7 +34,7 @@ export function CountdownTimer({ startTime, endTime, onExpire }: CountdownTimerP
       <div className="flex items-center space-x-2">
         <Clock className="h-5 w-5 text-amber-600" />
         <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-          Time Remaining to Complete Payment
+          {t('booking.payment.timeRemaining.title')}
         </h4>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -40,19 +42,19 @@ export function CountdownTimer({ startTime, endTime, onExpire }: CountdownTimerP
           <div className="text-2xl font-bold text-amber-600">
             {hours.toString().padStart(2, '0')}
           </div>
-          <div className="text-xs text-amber-700 dark:text-amber-300">Hours</div>
+          <div className="text-xs text-amber-700 dark:text-amber-300">{t('booking.payment.timeRemaining.hours')}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-amber-600">
             {minutes.toString().padStart(2, '0')}
           </div>
-          <div className="text-xs text-amber-700 dark:text-amber-300">Minutes</div>
+          <div className="text-xs text-amber-700 dark:text-amber-300">{t('booking.payment.timeRemaining.minutes')}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-amber-600">
             {seconds.toString().padStart(2, '0')}
           </div>
-          <div className="text-xs text-amber-700 dark:text-amber-300">Seconds</div>
+          <div className="text-xs text-amber-700 dark:text-amber-300">{t('booking.payment.timeRemaining.seconds')}</div>
         </div>
       </div>
     </div>

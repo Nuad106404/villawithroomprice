@@ -31,8 +31,16 @@ interface FormData {
     en: string;
     th: string;
   };
-  pricePerNight: number;
-  discountedPrice: number;
+  pricing: {
+    weekday: {
+      regular: number;
+      discounted: number;
+    };
+    weekend: {
+      regular: number;
+      discounted: number;
+    };
+  };
   maxGuests: number;
   bedrooms: number;
   bathrooms: number;
@@ -58,8 +66,10 @@ const defaultFormData: FormData = {
   title: { en: '', th: '' },
   description: { en: '', th: '' },
   beachfront: { en: '', th: '' },
-  pricePerNight: 0,
-  discountedPrice: 0,
+  pricing: {
+    weekday: { regular: 0, discounted: 0 },
+    weekend: { regular: 0, discounted: 0 },
+  },
   maxGuests: 6,
   bedrooms: 3,
   bathrooms: 3,
@@ -93,8 +103,10 @@ export default function AdminVilla() {
         title: villa.title || { en: '', th: '' },
         description: villa.description || { en: '', th: '' },
         beachfront: villa.beachfront || { en: '', th: '' },
-        pricePerNight: villa.pricePerNight || 0,
-        discountedPrice: villa.discountedPrice || 0,
+        pricing: villa.pricing || {
+          weekday: { regular: 0, discounted: 0 },
+          weekend: { regular: 0, discounted: 0 },
+        },
         maxGuests: villa.maxGuests || 6,
         bedrooms: villa.bedrooms || 3,
         bathrooms: villa.bathrooms || 3,
@@ -151,6 +163,20 @@ export default function AdminVilla() {
         description: "Failed to upload background image",
         status: "error"
       });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteBackground = async () => {
+    try {
+      setIsSubmitting(true);
+      await villaApi.deleteBackgroundImage();
+      toast.success('Background image deleted successfully');
+      dispatch(fetchVillaDetails());
+    } catch (error) {
+      console.error('Error deleting background image:', error);
+      toast.error('Failed to delete background image');
     } finally {
       setIsSubmitting(false);
     }
@@ -354,6 +380,19 @@ export default function AdminVilla() {
     }
   };
 
+  const handlePriceChange = (period: 'weekday' | 'weekend', type: 'regular' | 'discounted', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      pricing: {
+        ...prev.pricing,
+        [period]: {
+          ...prev.pricing[period],
+          [type]: parseFloat(value)
+        }
+      }
+    }));
+  };
+
   if (!villa && loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -385,12 +424,7 @@ export default function AdminVilla() {
                       variant="destructive"
                       size="icon"
                       className="absolute -top-2 -right-2"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          backgroundImage: ''
-                        }));
-                      }}
+                      onClick={handleDeleteBackground}
                       disabled={isSubmitting}
                     >
                       <X className="h-4 w-4" />
@@ -460,6 +494,66 @@ export default function AdminVilla() {
                   <p className="mt-1 text-sm text-gray-500">
                     You can upload multiple images. Recommended size: 1920x1080px. Max file size: 5MB per image
                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing Section */}
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium mb-4">{t('admin.villa.pricing')}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Weekday Pricing */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">{t('admin.villa.weekdayPricing')}</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="weekdayRegularPrice">{t('admin.villa.regularPrice')}</Label>
+                      <Input
+                        id="weekdayRegularPrice"
+                        type="number"
+                        value={formData.pricing.weekday.regular || ''}
+                        onChange={(e) => handlePriceChange('weekday', 'regular', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="weekdayDiscountedPrice">{t('admin.villa.discountedPrice')}</Label>
+                      <Input
+                        id="weekdayDiscountedPrice"
+                        type="number"
+                        value={formData.pricing.weekday.discounted || ''}
+                        onChange={(e) => handlePriceChange('weekday', 'discounted', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Weekend Pricing */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">{t('admin.villa.weekendPricing')}</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="weekendRegularPrice">{t('admin.villa.regularPrice')}</Label>
+                      <Input
+                        id="weekendRegularPrice"
+                        type="number"
+                        value={formData.pricing.weekend.regular || ''}
+                        onChange={(e) => handlePriceChange('weekend', 'regular', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="weekendDiscountedPrice">{t('admin.villa.discountedPrice')}</Label>
+                      <Input
+                        id="weekendDiscountedPrice"
+                        type="number"
+                        value={formData.pricing.weekend.discounted || ''}
+                        onChange={(e) => handlePriceChange('weekend', 'discounted', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -572,52 +666,6 @@ export default function AdminVilla() {
                 className="w-full"
                 required
               />
-            </div>
-
-            {/* Price Per Night */}
-            <div className="space-y-2">
-              <Label htmlFor="pricePerNight">Price Per Night</Label>
-              <Input
-                id="pricePerNight"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.pricePerNight}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                  if (value >= 0) {
-                    handleInputChange('pricePerNight', value);
-                  }
-                }}
-                className="w-full"
-                required
-              />
-              <p className="text-sm text-gray-500">
-                Price per night for the villa
-              </p>
-            </div>
-
-            {/* Discounted Price */}
-            <div className="space-y-2">
-              <Label htmlFor="discountedPrice">Discounted Price</Label>
-              <Input
-                id="discountedPrice"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.discountedPrice}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                  if (value >= 0) {
-                    handleInputChange('discountedPrice', value);
-                  }
-                }}
-                className="w-full"
-                required
-              />
-              <p className="text-sm text-gray-500">
-                Discounted price per night for the villa
-              </p>
             </div>
 
             {/* Max Guests */}

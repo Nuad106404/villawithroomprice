@@ -166,24 +166,84 @@ export function PaymentMethod() {
               >
                 {t('booking.payment.choosePreferred')}
               </motion.p>
-              {booking && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-6"
-                >
+            </div>
+
+            {/* Booking Details Container */}
+            {booking && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6"
+              >
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {t('booking.confirmation.details')}
+                      </h3>
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 text-sm rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                        {t(`booking.confirmation.statusTypes.${booking.status}`)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.checkIn')}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {new Date(booking.bookingDetails.checkIn).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.checkOut')}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {new Date(booking.bookingDetails.checkOut).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.guests')}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{booking.bookingDetails.guests}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.total')}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {new Intl.NumberFormat('th-TH', {
+                          style: 'currency',
+                          currency: 'THB',
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(booking.bookingDetails.totalPrice)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.customerInfo')}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {`${booking.customerInfo.firstName} ${booking.customerInfo.lastName}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6">
                   <CountdownTimer
                     startTime={new Date(booking.createdAt)}
                     endTime={new Date(booking.expiresAt)}
                     onExpire={() => {
-                      toast.error(t('booking.errors.expired'));
+                      toast.error(t('booking.payment.expired'));
                       navigate('/');
                     }}
                   />
-                </motion.div>
-              )}
-            </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Payment method selection */}
             <motion.div 
@@ -216,7 +276,7 @@ export function PaymentMethod() {
                 )}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="relative z-10 h-[70%] flex flex-col justify-between">
                   <div className="space-y-1 sm:space-y-2">
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
@@ -252,7 +312,7 @@ export function PaymentMethod() {
                   )}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div className="relative z-10 h-[70%] flex flex-col justify-between">
                     <div className="space-y-1 sm:space-y-2">
                       <div className="flex items-center gap-2">
                         <QrCode className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />

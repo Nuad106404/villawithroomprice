@@ -20,7 +20,8 @@ const bankDetailsSchema = new mongoose.Schema({
 
 const promptPaySchema = new mongoose.Schema({
   qrImage: {
-    type: String
+    type: String,
+    trim: true
   }
 });
 
@@ -52,14 +53,14 @@ const roomSchema = new mongoose.Schema({
 
 const villaSchema = new mongoose.Schema({
   name: {
-    en: {
-      type: String,
-      required: [true, 'English villa name is required'],
-      trim: true
-    },
     th: {
       type: String,
-      required: [true, 'Thai villa name is required'],
+      required: [true, 'Thai name is required'],
+      trim: true
+    },
+    en: {
+      type: String,
+      required: [true, 'English name is required'],
       trim: true
     }
   },
@@ -76,14 +77,14 @@ const villaSchema = new mongoose.Schema({
     }
   },
   description: {
-    en: {
-      type: String,
-      required: [true, 'English description is required'],
-      trim: true
-    },
     th: {
       type: String,
       required: [true, 'Thai description is required'],
+      trim: true
+    },
+    en: {
+      type: String,
+      required: [true, 'English description is required'],
       trim: true
     }
   },
@@ -100,56 +101,74 @@ const villaSchema = new mongoose.Schema({
   beachfront: {
     en: {
       type: String,
-      default: 'Direct access to the beach',
       trim: true
     },
     th: {
       type: String,
-      default: 'เข้าถึงชายหาดได้โดยตรง',
       trim: true
     }
   },
-  pricePerNight: {
-    type: Number,
-    required: [true, 'Price per night is required'],
-    min: [0, 'Price cannot be negative'],
-    default: 0
-  },
-  discountedPrice: {
-    type: Number,
-    min: [0, 'Discounted price cannot be negative'],
-    default: 0,
-    validate: {
-      validator: function(value) {
-        return value === 0 || value < this.pricePerNight;
+  pricing: {
+    weekday: {
+      regular: {
+        type: Number,
+        required: [true, 'Weekday regular price is required'],
+        min: [0, 'Price cannot be negative'],
+        default: 0
       },
-      message: 'Discounted price must be less than regular price'
+      discounted: {
+        type: Number,
+        min: [0, 'Price cannot be negative'],
+        default: 0,
+        validate: {
+          validator: function(value) {
+            return !value || value <= this.pricing.weekday.regular;
+          },
+          message: 'Weekday discounted price must be less than regular price'
+        }
+      }
+    },
+    weekend: {
+      regular: {
+        type: Number,
+        required: [true, 'Weekend regular price is required'],
+        min: [0, 'Price cannot be negative'],
+        default: 0
+      },
+      discounted: {
+        type: Number,
+        min: [0, 'Price cannot be negative'],
+        default: 0,
+        validate: {
+          validator: function(value) {
+            return !value || value <= this.pricing.weekend.regular;
+          },
+          message: 'Weekend discounted price must be less than regular price'
+        }
+      }
     }
   },
   maxGuests: {
     type: Number,
-    required: true,
-    default: 6
+    required: [true, 'Maximum number of guests is required'],
+    min: [1, 'Must allow at least 1 guest']
   },
   bedrooms: {
     type: Number,
     required: true,
-    default: 3
+    min: 1
   },
   bathrooms: {
     type: Number,
     required: true,
-    default: 3
+    min: 1
   },
-  bankDetails: [bankDetailsSchema],
-  promptPay: promptPaySchema,
-  backgroundImage: {
-    type: String
-  },
-  slideImages: [{
+  images: [{
     type: String
   }],
   rooms: [roomSchema],
+  bankDetails: [bankDetailsSchema],
+  promptPay: promptPaySchema,
   isActive: {
     type: Boolean,
     default: true
@@ -164,31 +183,36 @@ villaSchema.statics.ensureDefaultVilla = async function() {
   if (count === 0) {
     const defaultVilla = new this({
       name: {
-        en: 'Luxury Beach Villa',
-        th: 'วิลล่าหรูริมทะเล'
+        en: 'Villa Paradise',
+        th: 'วิลล่า พาราไดซ์'
       },
       title: {
-        en: 'Beachfront Paradise',
-        th: 'สวรรค์ริมทะเล'
+        en: 'Experience Luxury Like Never Before',
+        th: 'สัมผัสประสบการณ์ความหรูหราที่ไม่เคยมีมาก่อน'
       },
       description: {
-        en: 'Experience luxury living by the beach',
-        th: 'สัมผัสประสบการณ์การพักผ่อนสุดหรูริมทะเล'
+        en: 'A luxurious villa with modern amenities',
+        th: 'วิลล่าหรูพร้อมสิ่งอำนวยความสะดวกทันสมัย'
       },
-      address: {
-        en: '123 Beach Road',
-        th: '123 ถนนริมทะเล'
+      beachfront: {
+        en: 'Direct access to the beach',
+        th: 'เข้าถึงชายหาดได้โดยตรง'
       },
-      bankDetails: [
-        {
-          bank: 'Kasikorn Bank (KBank)',
-          accountNumber: 'xxx-x-xxxxx-x',
-          accountName: 'Your Company Name Co., Ltd.'
+      pricing: {
+        weekday: {
+          regular: 1000,
+          discounted: 900
+        },
+        weekend: {
+          regular: 1200,
+          discounted: 1100
         }
-      ],
-      promptPay: {
-        qrImage: ''
-      }
+      },
+      maxGuests: 6,
+      bedrooms: 3,
+      bathrooms: 3,
+      bankDetails: [],
+      promptPay: { qrImage: '' }
     });
     await defaultVilla.save();
   }

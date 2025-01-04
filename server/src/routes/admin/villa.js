@@ -13,19 +13,19 @@ const __dirname = dirname(__filename);
 const router = express.Router();
 
 // Create uploads directory for villa backgrounds if it doesn't exist
-const villaUploadsDir = path.join(__dirname, '../../../public/uploads/villa');
+const villaUploadsDir = path.join(__dirname, '../../../server/uploads/villa');
 if (!fs.existsSync(villaUploadsDir)) {
   fs.mkdirSync(villaUploadsDir, { recursive: true });
 }
 
 // Create uploads directory for QR codes if it doesn't exist
-const qrUploadsDir = path.join(__dirname, '../../../public/uploads/QR');
+const qrUploadsDir = path.join(__dirname, '../../../server/uploads/QR');
 if (!fs.existsSync(qrUploadsDir)) {
   fs.mkdirSync(qrUploadsDir, { recursive: true });
 }
 
 // Create uploads directory for room images if it doesn't exist
-const roomUploadsDir = path.join(__dirname, '../../../public/uploads/rooms');
+const roomUploadsDir = path.join(__dirname, '../../../server/uploads/rooms');
 if (!fs.existsSync(roomUploadsDir)) {
   fs.mkdirSync(roomUploadsDir, { recursive: true });
 }
@@ -52,7 +52,16 @@ router.get('/', async (req, res) => {
           en: 'Direct access to the beach',
           th: 'เข้าถึงชายหาดได้โดยตรง'
         },
-        pricePerNight: 299,
+        pricing: {
+          weekday: {
+            regular: 299,
+            discounted: 0
+          },
+          weekend: {
+            regular: 399,
+            discounted: 0
+          }
+        },
         maxGuests: 6,
         bedrooms: 3,
         bathrooms: 3
@@ -125,9 +134,8 @@ router.patch('/', async (req, res) => {
       beachfront, 
       maxGuests, 
       bedrooms, 
-      bathrooms, 
-      pricePerNight, 
-      discountedPrice,
+      bathrooms,
+      pricing,
       bankDetails,
       promptPay
     } = req.body;
@@ -153,20 +161,47 @@ router.patch('/', async (req, res) => {
       };
     }
 
-    // Update pricePerNight if provided
-    if (pricePerNight !== undefined) {
-      villa.pricePerNight = pricePerNight;
-    }
-
-    // Update discountedPrice if provided
-    if (discountedPrice !== undefined) {
-      // Validate that discounted price is less than regular price
-      if (discountedPrice > 0 && discountedPrice >= pricePerNight) {
-        return res.status(400).json({
-          message: 'Discounted price must be less than regular price'
-        });
+    // Update pricing if provided
+    if (pricing) {
+      // Validate weekday pricing
+      if (pricing.weekday) {
+        if (pricing.weekday.regular !== undefined) {
+          if (pricing.weekday.regular < 0) {
+            return res.status(400).json({
+              message: 'Weekday regular price cannot be negative'
+            });
+          }
+          villa.pricing.weekday.regular = pricing.weekday.regular;
+        }
+        if (pricing.weekday.discounted !== undefined) {
+          if (pricing.weekday.discounted > pricing.weekday.regular) {
+            return res.status(400).json({
+              message: 'Weekday discounted price must be less than regular price'
+            });
+          }
+          villa.pricing.weekday.discounted = pricing.weekday.discounted;
+        }
       }
-      villa.discountedPrice = discountedPrice;
+
+      // Validate weekend pricing
+      if (pricing.weekend) {
+        if (pricing.weekend.regular !== undefined) {
+          if (pricing.weekend.regular < 0) {
+            return res.status(400).json({
+              message: 'Weekend regular price cannot be negative'
+            });
+          }
+          villa.pricing.weekend.regular = pricing.weekend.regular;
+        }
+        if (pricing.weekend.discounted !== undefined) {
+          if (pricing.weekend.discounted > pricing.weekend.regular) {
+            return res.status(400).json({
+              message: 'Weekend discounted price must be less than regular price'
+            });
+          }
+          villa.pricing.weekend.discounted = pricing.weekend.discounted;
+        }
+      }
     }
 
     // Update maxGuests if provided
@@ -223,7 +258,7 @@ router.patch('/background', upload.villa.single('backgroundImage'), async (req, 
 
     // Delete old background image if it exists
     if (villa.backgroundImage) {
-      const oldImagePath = path.join(__dirname, '../../../uploads/villa', path.basename(villa.backgroundImage));
+      const oldImagePath = path.join(__dirname, '../../../server/uploads/villa', path.basename(villa.backgroundImage));
       console.log('Checking old image at:', oldImagePath);
       if (fs.existsSync(oldImagePath)) {
         console.log('Deleting old image');
@@ -232,7 +267,7 @@ router.patch('/background', upload.villa.single('backgroundImage'), async (req, 
     }
 
     // Update villa with new background image path
-    villa.backgroundImage = `/uploads/villa/${req.file.filename}`;
+    villa.backgroundImage = `http://localhost:5001/uploads/villa/${req.file.filename}`;
     console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
@@ -262,7 +297,7 @@ router.post('/background', upload.villa.single('backgroundImage'), async (req, r
 
     // Delete old background image if it exists
     if (villa.backgroundImage) {
-      const oldImagePath = path.join(__dirname, '../../../uploads/villa', path.basename(villa.backgroundImage));
+      const oldImagePath = path.join(__dirname, '../../../server/uploads/villa', path.basename(villa.backgroundImage));
       console.log('Checking old image at:', oldImagePath);
       if (fs.existsSync(oldImagePath)) {
         console.log('Deleting old image');
@@ -271,7 +306,7 @@ router.post('/background', upload.villa.single('backgroundImage'), async (req, r
     }
 
     // Update villa with new background image path
-    villa.backgroundImage = `/uploads/villa/${req.file.filename}`;
+    villa.backgroundImage = `http://localhost:5001/uploads/villa/${req.file.filename}`;
     console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
@@ -304,7 +339,7 @@ router.post('/slides', upload.villa.array('slideImages', 10), async (req, res) =
     if (villa.slideImages && villa.slideImages.length > 0) {
       villa.slideImages.forEach(imagePath => {
         if (!imagePath) return;
-        const oldPath = path.join(__dirname, '../../../uploads/villa', path.basename(imagePath));
+        const oldPath = path.join(__dirname, '../../../server/uploads/villa', path.basename(imagePath));
         console.log('Checking old image at:', oldPath);
         if (fs.existsSync(oldPath)) {
           console.log('Deleting old image');
@@ -314,7 +349,7 @@ router.post('/slides', upload.villa.array('slideImages', 10), async (req, res) =
     }
 
     // Update villa with new slide image paths
-    villa.slideImages = req.files.map(file => `/uploads/villa/${file.filename}`);
+    villa.slideImages = req.files.map(file => `http://localhost:5001/uploads/villa/${file.filename}`);
     console.log('Setting new slide image URLs:', villa.slideImages);
     await villa.save();
 
@@ -326,38 +361,59 @@ router.post('/slides', upload.villa.array('slideImages', 10), async (req, res) =
   }
 });
 
-// Delete specific slide image
+router.delete('/background', async (req, res) => {
+  try {
+    const villa = await Villa.findOne();
+    if (!villa || !villa.backgroundImage) {
+      return res.status(404).json({ message: 'Background image not found' });
+    }
+
+    // Delete background image file
+    const filename = villa.backgroundImage.split('/').pop();
+    const filePath = path.join(__dirname, '../../../uploads/villa', filename);
+    console.log('Deleting background at:', filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Remove background image reference from villa
+    villa.backgroundImage = null;
+    await villa.save();
+
+    res.json({ message: 'Background image deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting background image:', error);
+    res.status(500).json({ message: 'Error deleting background image', error: error.message });
+  }
+});
+
 router.delete('/slides/:index', async (req, res) => {
   try {
     const { index } = req.params;
     const villa = await Villa.findOne();
-    
-    if (!villa) {
-      return res.status(404).json({ message: 'Villa not found' });
-    }
-
-    if (!villa.slideImages || index >= villa.slideImages.length) {
-      return res.status(404).json({ message: 'Image not found' });
+    if (!villa || !villa.slideImages || !villa.slideImages[index]) {
+      return res.status(404).json({ message: 'Slide image not found' });
     }
 
     // Delete the file
     const imagePath = villa.slideImages[index];
     if (imagePath) {
-      const oldPath = path.join(__dirname, '../../../uploads/villa', path.basename(imagePath));
+      const filename = imagePath.split('/').pop();
+      const oldPath = path.join(__dirname, '../../../uploads/villa', filename);
       console.log('Deleting image at:', oldPath);
       if (fs.existsSync(oldPath)) {
         fs.unlinkSync(oldPath);
       }
     }
 
-    // Remove from array
+    // Remove the image from the array
     villa.slideImages.splice(index, 1);
     await villa.save();
 
-    res.json({ message: 'Slide image deleted successfully', villa });
+    res.json({ message: 'Slide image deleted successfully' });
   } catch (error) {
     console.error('Error deleting slide image:', error);
-    res.status(500).json({ message: 'Error deleting slide image' });
+    res.status(500).json({ message: 'Error deleting slide image', error: error.message });
   }
 });
 
@@ -390,35 +446,43 @@ router.patch('/slides/reorder', async (req, res) => {
 // Upload PromptPay QR code
 router.post('/promptpay-qr', upload.qr.single('qrImage'), async (req, res) => {
   try {
+    console.log('Received file upload request');
+    console.log('File:', req.file);
+
     if (!req.file) {
-      return res.status(400).json({ message: 'No QR code image uploaded' });
+      console.log('No file received');
+      return res.status(400).json({ message: 'No file uploaded' });
     }
 
     const villa = await Villa.findOne();
     if (!villa) {
+      console.log('Villa not found');
       return res.status(404).json({ message: 'Villa not found' });
     }
 
     // Delete old QR image if it exists
     if (villa.promptPay?.qrImage) {
-      const oldPath = path.join(__dirname, '../../../uploads/QR', path.basename(villa.promptPay.qrImage));
+      const oldPath = path.join(__dirname, '../../../uploads/QR', path.basename(villa.promptPay.qrImage.split('/').pop()));
+      console.log('Checking old QR at:', oldPath);
       if (fs.existsSync(oldPath)) {
+        console.log('Deleting old QR');
         fs.unlinkSync(oldPath);
       }
     }
 
-    // Update villa with new QR image
+    // Update villa with new QR image path
     if (!villa.promptPay) {
-      villa.promptPay = { qrImage: `/uploads/QR/${req.file.filename}` };
-    } else {
-      villa.promptPay.qrImage = `/uploads/QR/${req.file.filename}`;
+      villa.promptPay = {};
     }
+    villa.promptPay.qrImage = `http://localhost:5001/uploads/QR/${req.file.filename}`;
+    console.log('Setting new QR URL:', villa.promptPay.qrImage);
     await villa.save();
 
+    console.log('Villa updated successfully');
     res.json({ message: 'QR code uploaded successfully', qrImage: villa.promptPay.qrImage });
   } catch (error) {
     console.error('Error uploading QR code:', error);
-    res.status(500).json({ message: 'Failed to upload QR code' });
+    res.status(500).json({ message: 'Failed to upload QR code', error: error.message });
   }
 });
 
@@ -427,23 +491,26 @@ router.delete('/promptpay-qr', async (req, res) => {
   try {
     const villa = await Villa.findOne();
     if (!villa || !villa.promptPay?.qrImage) {
+      console.log('QR code not found');
       return res.status(404).json({ message: 'QR code not found' });
     }
 
-    // Delete QR code file
-    const qrPath = path.join(__dirname, '../../../uploads/QR', path.basename(villa.promptPay.qrImage));
-    if (fs.existsSync(qrPath)) {
-      fs.unlinkSync(qrPath);
+    // Delete QR image file
+    const filePath = path.join(__dirname, '../../../uploads/QR', path.basename(villa.promptPay.qrImage.split('/').pop()));
+    console.log('Deleting QR at:', filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
 
-    // Remove QR code from villa
-    villa.promptPay = { qrImage: '' };
+    // Remove QR image reference from villa
+    villa.promptPay.qrImage = null;
     await villa.save();
 
+    console.log('QR code deleted successfully');
     res.json({ message: 'QR code deleted successfully' });
   } catch (error) {
     console.error('Error deleting QR code:', error);
-    res.status(500).json({ message: 'Failed to delete QR code' });
+    res.status(500).json({ message: 'Failed to delete QR code', error: error.message });
   }
 });
 
@@ -457,7 +524,7 @@ router.post('/rooms', upload.rooms.array('roomImages', 10), async (req, res) => 
       return res.status(404).json({ message: 'Villa not found' });
     }
 
-    const images = req.files ? req.files.map(file => `/uploads/rooms/${file.filename}`) : [];
+    const images = req.files ? req.files.map(file => `http://localhost:5001/uploads/rooms/${file.filename}`) : [];
     
     villa.rooms.push({
       name: JSON.parse(name),
@@ -491,12 +558,12 @@ router.patch('/rooms/:index', upload.rooms.array('roomImages', 10), async (req, 
     // Delete old images if new ones are uploaded
     if (req.files && req.files.length > 0) {
       villa.rooms[index].images.forEach(imagePath => {
-        const oldPath = path.join(__dirname, '../../../uploads/rooms', path.basename(imagePath));
+        const oldPath = path.join(__dirname, '../../../server/uploads/rooms', path.basename(imagePath.split('/').pop()));
         if (fs.existsSync(oldPath)) {
           fs.unlinkSync(oldPath);
         }
       });
-      villa.rooms[index].images = req.files.map(file => `/uploads/rooms/${file.filename}`);
+      villa.rooms[index].images = req.files.map(file => `http://localhost:5001/uploads/rooms/${file.filename}`);
     }
 
     villa.rooms[index].name = JSON.parse(name);
@@ -526,7 +593,7 @@ router.delete('/rooms/:index', async (req, res) => {
 
     // Delete room images
     villa.rooms[index].images.forEach(imagePath => {
-      const oldPath = path.join(__dirname, '../../../uploads/rooms', path.basename(imagePath));
+      const oldPath = path.join(__dirname, '../../../server/uploads/rooms', path.basename(imagePath.split('/').pop()));
       if (fs.existsSync(oldPath)) {
         fs.unlinkSync(oldPath);
       }

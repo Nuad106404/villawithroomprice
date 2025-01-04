@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Booking from '../../models/Booking.js';
 import Villa from '../../models/Villa.js';
+import { calculateTotalPrice, getAvailableDates } from '../../services/bookingService.js';
 
 const router = express.Router();
 
@@ -9,16 +10,7 @@ const router = express.Router();
 const validateInitialBooking = [
   body('bookingDetails.checkIn').isISO8601(),
   body('bookingDetails.checkOut').isISO8601(),
-  body('bookingDetails.guests').isInt({ min: 1 }).custom(async (value) => {
-    const villa = await Villa.findOne();
-    if (!villa) {
-      throw new Error('Villa not found');
-    }
-    if (value > villa.maxGuests) {
-      throw new Error(`Number of guests cannot exceed villa capacity of ${villa.maxGuests}`);
-    }
-    return true;
-  }),
+  body('bookingDetails.guests').isInt({ min: 1 }),
   body('bookingDetails.totalPrice').isFloat({ min: 0 }),
 ];
 
@@ -30,6 +22,33 @@ const validateCustomerInfo = [
   body('customerInfo.phone').trim().notEmpty(),
 ];
 
+// Get available dates and prices
+router.get('/available-dates', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Start date and end date are required'
+      });
+    }
+
+    const dates = await getAvailableDates(startDate, endDate);
+    
+    res.json({
+      status: 'success',
+      data: dates
+    });
+  } catch (error) {
+    console.error('Error getting available dates:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get available dates'
+    });
+  }
+});
+
 // Create a new booking
 router.post('/', validateInitialBooking, async (req, res) => {
   try {
@@ -38,20 +57,14 @@ router.post('/', validateInitialBooking, async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Double-check villa capacity
-    const villa = await Villa.findOne();
-    if (!villa) {
-      return res.status(400).json({ message: 'Villa not found' });
-    }
-    
-    if (req.body.bookingDetails.guests > villa.maxGuests) {
-      return res.status(400).json({ 
-        message: `Number of guests cannot exceed villa capacity of ${villa.maxGuests}` 
-      });
-    }
+    // Calculate total price based on weekday/weekend rates
+    const totalPrice = await calculateTotalPrice(req.body.bookingDetails.checkIn, req.body.bookingDetails.checkOut);
 
     const booking = new Booking({
-      bookingDetails: req.body.bookingDetails,
+      bookingDetails: {
+        ...req.body.bookingDetails,
+        totalPrice
+      },
       status: 'pending'
     });
     await booking.save();

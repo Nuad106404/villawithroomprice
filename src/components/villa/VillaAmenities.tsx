@@ -22,7 +22,6 @@ const amenities = [
   { icon: Wind, label: 'Air Conditioning' },
   { icon: Car, label: 'Free Parking' },
   { icon: Bath, label: 'Luxury Bathroom' },
-  { icon: Dumbbell, label: 'Fitness Room' },
   { icon: BBQ, label: 'BBQ Area' },
 ];
 

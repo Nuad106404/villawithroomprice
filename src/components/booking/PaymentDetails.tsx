@@ -25,7 +25,7 @@ export function PaymentDetails() {
 
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Bank Transfer
+            {t('booking.payment.bankTransfer')}
           </h3>
           
           <div className="space-y-4">
@@ -43,7 +43,7 @@ export function PaymentDetails() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      Account Number
+                      {t('booking.payment.accountNumber')}
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {bank.accountNumber}
@@ -52,7 +52,7 @@ export function PaymentDetails() {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      Account Name
+                      {t('booking.payment.accountName')}
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
                       {bank.accountName}
@@ -65,7 +65,7 @@ export function PaymentDetails() {
                   className="w-full"
                   onClick={() => handleCopy(bank.accountNumber)}
                 >
-                  Copy Account Number
+                  {t('booking.payment.copyAccountNumber')}
                 </Button>
               </div>
             ))}
@@ -73,7 +73,7 @@ export function PaymentDetails() {
         </div>
 
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          <p>Please transfer the full amount using either PromptPay QR Code or bank transfer. After making the transfer, you will need to upload the payment slip in the next step.</p>
+          <p>{t('booking.payment.instructions')}</p>
         </div>
       </div>
     </div>

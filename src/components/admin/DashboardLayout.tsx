@@ -20,9 +20,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
       <DashboardHeader 
-        className="lg:pl-72" 
+        className="fixed top-0 right-0 left-0 lg:left-72 z-30 bg-white/95 backdrop-blur-sm dark:bg-gray-800/95" 
         onMobileMenuToggle={toggleMobileMenu}
         isMobileMenuOpen={isMobileMenuOpen}
       />
@@ -30,16 +31,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = () => {
       {/* Mobile menu backdrop */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-30 bg-surface-900/60 backdrop-blur-sm transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-gray-900/60 backdrop-blur-sm transition-opacity lg:hidden"
           onClick={handleBackdropClick}
         />
       )}
       
+      {/* Sidebar */}
       <Sidebar isMobileMenuOpen={isMobileMenuOpen} />
       
-      <main className="pt-16 lg:pl-72">
-        <div className="p-8">
-          <div className="max-w-7xl mx-auto space-y-8">
+      {/* Main Content */}
+      <main className="lg:pl-72 pt-16">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
             <Outlet />
           </div>
         </div>

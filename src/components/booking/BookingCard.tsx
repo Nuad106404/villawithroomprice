@@ -14,6 +14,11 @@ import cn from 'classnames';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 
+const isWeekend = (date: Date): boolean => {
+  const day = date.getDay();
+  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+};
+
 export function BookingCard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -21,41 +26,106 @@ export function BookingCard() {
   const [guests, setGuests] = React.useState(2);
   const [isLoading, setIsLoading] = React.useState(false);
   const villa = useSelector((state: RootState) => state.villa.villa);
-  const pricePerNight = villa?.pricePerNight || 0;
-  const discountedPrice = villa?.discountedPrice || 0;
-  const actualPrice = discountedPrice > 0 ? discountedPrice : pricePerNight;
   const maxGuests = villa?.maxGuests || 4;
 
-  const totalNights = date?.from && date?.to
-    ? Math.ceil((date.to.getTime() - date.from.getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+  // Get pricing for display based on selected date
+  const getDisplayPrice = () => {
+    if (!date?.from || !villa?.pricing) {
+      // Default to weekday pricing if no date selected
+      return villa?.pricing?.weekday || { regular: 0, discounted: 0 };
+    }
+    const selectedDate = new Date(date.from);
+    return isWeekend(selectedDate) ? villa.pricing.weekend : villa.pricing.weekday;
+  };
 
-  const totalPrice = totalNights * actualPrice;
+  const displayPricing = getDisplayPrice();
+  const regularPrice = displayPricing.regular;
+  const discountedPrice = displayPricing.discounted;
 
-  const formattedPricePerNight = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(pricePerNight);
+  // Calculate breakdown of nights and total price
+  const calculatePriceBreakdown = () => {
+    if (!date?.from || !date?.to || !villa?.pricing) {
+      return {
+        weekdayNights: 0,
+        weekendNights: 0,
+        regularTotal: 0,
+        discountedTotal: 0
+      };
+    }
 
-  const formattedDiscountedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(discountedPrice);
+    let weekdayNights = 0;
+    let weekendNights = 0;
+    const currentDate = new Date(date.from);
+    const endDate = new Date(date.to);
 
-  const formattedTotalPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(totalPrice);
+    while (currentDate < endDate) {
+      if (isWeekend(currentDate)) {
+        weekendNights++;
+      } else {
+        weekdayNights++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
 
-  const discountPercentage = discountedPrice > 0
-    ? Math.round(((pricePerNight - discountedPrice) / pricePerNight) * 100)
-    : 0;
+    const weekdayRegular = weekdayNights * (villa.pricing.weekday.regular || 0);
+    const weekdayDiscounted = weekdayNights * (villa.pricing.weekday.discounted || villa.pricing.weekday.regular || 0);
+    const weekendRegular = weekendNights * (villa.pricing.weekend.regular || 0);
+    const weekendDiscounted = weekendNights * (villa.pricing.weekend.discounted || villa.pricing.weekend.regular || 0);
+
+    return {
+      weekdayNights,
+      weekendNights,
+      regularTotal: weekdayRegular + weekendRegular,
+      discountedTotal: weekdayDiscounted + weekendDiscounted
+    };
+  };
+
+  const priceBreakdown = calculatePriceBreakdown();
+  const totalNights = priceBreakdown.weekdayNights + priceBreakdown.weekendNights;
+  const totalPrice = priceBreakdown.discountedTotal;
+  const regularTotalPrice = priceBreakdown.regularTotal;
+
+  // Format price display strings
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getPriceDisplay = () => {
+    const hasWeekday = priceBreakdown.weekdayNights > 0;
+    const hasWeekend = priceBreakdown.weekendNights > 0;
+    const weekdayPrice = villa?.pricing?.weekday?.discounted || villa?.pricing?.weekday?.regular || 0;
+    const weekendPrice = villa?.pricing?.weekend?.discounted || villa?.pricing?.weekend?.regular || 0;
+
+    if (hasWeekday && hasWeekend) {
+      return `${formatPrice(weekdayPrice)} × ${priceBreakdown.weekdayNights} ${t('common.weekdayNights')}, ${formatPrice(weekendPrice)} × ${priceBreakdown.weekendNights} ${t('common.weekendNights')}`;
+    } else if (hasWeekday) {
+      return `${formatPrice(weekdayPrice)} × ${priceBreakdown.weekdayNights} ${t('common.nights')}`;
+    } else if (hasWeekend) {
+      return `${formatPrice(weekendPrice)} × ${priceBreakdown.weekendNights} ${t('common.nights')}`;
+    }
+    return '';
+  };
+
+  const getRegularPriceDisplay = () => {
+    const hasWeekday = priceBreakdown.weekdayNights > 0;
+    const hasWeekend = priceBreakdown.weekendNights > 0;
+    const weekdayRegular = villa?.pricing?.weekday?.regular || 0;
+    const weekendRegular = villa?.pricing?.weekend?.regular || 0;
+
+    if (hasWeekday && hasWeekend) {
+      return `${formatPrice(weekdayRegular)} × ${priceBreakdown.weekdayNights} ${t('common.weekdayNights')}, ${formatPrice(weekendRegular)} × ${priceBreakdown.weekendNights} ${t('common.weekendNights')}`;
+    } else if (hasWeekday) {
+      return `${formatPrice(weekdayRegular)} × ${priceBreakdown.weekdayNights} ${t('common.nights')}`;
+    } else if (hasWeekend) {
+      return `${formatPrice(weekendRegular)} × ${priceBreakdown.weekendNights} ${t('common.nights')}`;
+    }
+    return '';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,46 +199,54 @@ export function BookingCard() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_107%,rgba(253,230,138,0.3)_0%,rgba(251,191,36,0.1)_5%,rgba(217,119,6,0.05)_45%,rgba(180,83,9,0.1)_60%,transparent_70%)] dark:bg-[radial-gradient(circle_at_30%_107%,rgba(253,230,138,0.1)_0%,rgba(251,191,36,0.05)_5%,rgba(217,119,6,0.02)_45%,rgba(180,83,9,0.05)_60%,transparent_70%)]"></div>
               <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-amber-500/10 dark:bg-amber-400/5 rounded-full blur-2xl"></div>
               
-              {discountedPrice > 0 ? (
-                <div className="relative space-y-2">
-                  {/* Discount Badge */}
-                  <div className="absolute -right-2 -top-2 transform rotate-12">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-red-500 rounded-full blur-sm opacity-20"></div>
-                      <span className="relative inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm">
-                        -{discountPercentage}%
-                      </span>
+              <div className="relative space-y-4">
+                {/* Current Price Display */}
+                <div className="flex flex-col items-center sm:items-start space-y-2">
+                  {discountedPrice > 0 && (
+                    <div className="absolute -right-2 -top-2 transform rotate-12">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-red-500 rounded-full blur-sm opacity-20"></div>
+                        <span className="relative inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm">
+                          -{Math.round(((regularPrice - discountedPrice) / regularPrice) * 100)}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Discounted Price */}
-                  <div className="flex flex-col items-center sm:items-start">
-                    <div className="relative">
-                      <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent tracking-tight">
-                        {formattedDiscountedPrice}
-                      </span>
-                      <span className="ml-2 text-sm text-amber-700/70 dark:text-amber-300/70">/ {t('common.perNight')}</span>
-                    </div>
-                    
-                    {/* Original Price with Strike Effect */}
-                    <div className="relative mt-1">
-                      <span className="text-base text-gray-500/80 dark:text-gray-400/80 line-through decoration-red-500/30 decoration-2">
-                        {formattedPricePerNight}
-                      </span>
-                      <div className="absolute -inset-x-1 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative flex flex-col items-center sm:items-start">
+                  {/* Main Price Display */}
                   <div className="relative">
                     <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 dark:from-amber-400 dark:to-amber-600 bg-clip-text text-transparent tracking-tight">
-                      {formattedPricePerNight}
+                      {discountedPrice > 0 ? formatPrice(discountedPrice) : formatPrice(regularPrice)}
                     </span>
                     <span className="ml-2 text-sm text-amber-700/70 dark:text-amber-300/70">/ {t('common.perNight')}</span>
                   </div>
+
+                  {discountedPrice > 0 && (
+                    <div className="relative mt-1">
+                      <span className="text-base text-gray-500/80 dark:text-gray-400/80 line-through decoration-red-500/30 decoration-2">
+                        {formatPrice(regularPrice)}
+                      </span>
+                      <div className="absolute -inset-x-1 top-1/2 h-[1px] bg-gradient-to-r from-transparent via-red-500/30 to-transparent"></div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Weekday/Weekend Price Info */}
+                <div className="border-t border-amber-200/30 dark:border-amber-700/30 pt-3 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-amber-700/70 dark:text-amber-300/70">{t('common.weekdayPrice')}</span>
+                    <span className="font-medium text-amber-800 dark:text-amber-200">
+                      {formatPrice(villa?.pricing?.weekday?.regular || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-amber-700/70 dark:text-amber-300/70">{t('common.weekendPrice')}</span>
+                    <span className="font-medium text-amber-800 dark:text-amber-200">
+                      {formatPrice(villa?.pricing?.weekend?.regular || 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-center sm:justify-start text-gray-600 dark:text-gray-300">
@@ -278,49 +356,39 @@ export function BookingCard() {
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700"
             >
-              {discountedPrice > 0 && (
+              {(villa?.pricing?.weekday?.discounted || villa?.pricing?.weekend?.discounted) && (
                 <div className="flex justify-between text-sm sm:text-base">
                   <div className="flex flex-col">
-                    <span className="text-gray-500 line-through">{formattedPricePerNight} × {totalNights} {t('common.nights')}</span>
+                    <span className="text-gray-500 line-through">{getRegularPriceDisplay()}</span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      {formattedDiscountedPrice} × {totalNights} {t('common.nights')}
+                      {getPriceDisplay()}
                     </span>
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-gray-500 line-through">
-                      {new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'THB',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      }).format(pricePerNight * totalNights)}
+                      {formatPrice(regularTotalPrice)}
                     </span>
-                    <span className="text-gray-600 dark:text-gray-400">{formattedTotalPrice}</span>
+                    <span className="text-gray-600 dark:text-gray-400">{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
               )}
-              {!discountedPrice && (
+              {!(villa?.pricing?.weekday?.discounted || villa?.pricing?.weekend?.discounted) && (
                 <div className="flex justify-between text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                  <span>{formattedPricePerNight} × {totalNights} {t('common.nights')}</span>
-                  <span>{formattedTotalPrice}</span>
+                  <span>{getPriceDisplay()}</span>
+                  <span>{formatPrice(totalPrice)}</span>
                 </div>
               )}
-              {discountedPrice > 0 && (
+              {(villa?.pricing?.weekday?.discounted || villa?.pricing?.weekend?.discounted) && (
                 <div className="flex justify-between text-sm sm:text-base text-green-600">
                   <span>{t('common.youSave')}</span>
                   <span>
-                    {new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'THB',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format((pricePerNight - discountedPrice) * totalNights)}
+                    {formatPrice(regularTotalPrice - totalPrice)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between font-semibold text-base sm:text-lg text-gray-900 dark:text-white">
                 <span>{t('common.total')}</span>
-                <span>{formattedTotalPrice}</span>
+                <span>{formatPrice(totalPrice)}</span>
               </div>
             </motion.div>
           )}

@@ -252,4 +252,36 @@ router.post('/:id/cancel', authenticate, async (req, res) => {
   }
 });
 
+// Delete a booking (admin only)
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized access'
+      });
+    }
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Booking not found'
+      });
+    }
+
+    await booking.remove();
+    res.json({
+      status: 'success',
+      message: 'Booking deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to delete booking'
+    });
+  }
+});
+
 export default router;
