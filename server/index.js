@@ -20,7 +20,12 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://miamibeachchaam.com', 'http://miamibeachchaam.com'],
+  origin: [
+    process.env.DEVELOPMENT_URL,
+    process.env.FRONTEND_URL,
+    process.env.CLIENT_URL,
+    process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:5001'
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(express.json());

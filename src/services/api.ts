@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { CustomerInfo } from '../types/booking';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://miamibeachchaam.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -165,7 +165,7 @@ export const bookingApi = {
       const { customerInfo, ...bookingDataWithoutCustomer } = bookingData;
       
       console.log('API: Creating booking with data:', JSON.stringify(bookingDataWithoutCustomer, null, 2));
-      const response = await api.post('/booking', bookingDataWithoutCustomer);
+      const response = await api.post('/api/booking', bookingDataWithoutCustomer);
       console.log('API: Received response:', JSON.stringify(response.data, null, 2));
       
       if (response.data?.status === 'success') {
@@ -185,7 +185,7 @@ export const bookingApi = {
   updateBooking: async (id: string, data: Partial<BookingData>) => {
     try {
       console.log('API: Updating booking with data:', JSON.stringify(data, null, 2));
-      const response = await api.patch(`/booking/${id}`, data);
+      const response = await api.put(`/api/booking/${id}`, data);
       
       if (response.data?.status === 'success') {
         return response.data;
@@ -203,7 +203,7 @@ export const bookingApi = {
 
   getBooking: async (id: string) => {
     try {
-      const response = await api.get(`/booking/${id}`);
+      const response = await api.get(`/api/booking/${id}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -215,7 +215,7 @@ export const bookingApi = {
 
   getAllBookings: async () => {
     try {
-      const response = await api.get('/booking/all');
+      const response = await api.get('/api/booking');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -227,7 +227,7 @@ export const bookingApi = {
 
   updateBookingStatus: async (id: string, status: string) => {
     try {
-      const response = await api.patch(`/booking/${id}`, { status });
+      const response = await api.patch(`/api/booking/${id}`, { status });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -238,14 +238,14 @@ export const bookingApi = {
   },
 
   deleteBooking: async (id: string) => {
-    const response = await api.delete(`/booking/${id}`);
+    const response = await api.delete(`/api/booking/${id}`);
     return response.data;
   },
 
   // Update payment details
   async updatePaymentDetails(id: string, paymentMethod: 'bank_transfer' | 'promptpay', paymentSlipUrl?: string) {
     try {
-      const response = await api.patch(`/booking/${id}`, {
+      const response = await api.patch(`/api/booking/${id}`, {
         paymentMethod,
         paymentSlipUrl,
         status: paymentSlipUrl ? 'in_review' : 'pending_payment'
@@ -282,7 +282,7 @@ export const bookingApi = {
   // Update customer info
   async updateCustomerInfo(id: string, customerInfo: CustomerInfo) {
     try {
-      const response = await api.patch(`/booking/${id}/customer-info`, {
+      const response = await api.patch(`/api/booking/${id}/customer-info`, {
         customerInfo
       });
       return response.data;
@@ -297,7 +297,7 @@ export const bookingApi = {
   // Send booking confirmation email
   async sendConfirmationEmail(id: string) {
     try {
-      const response = await api.post(`/booking/${id}/send-confirmation`);
+      const response = await api.post(`/api/booking/${id}/send-confirmation`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {

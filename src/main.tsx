@@ -5,7 +5,7 @@ import './index.css';
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://miamibeachchaam.com/api';
+axios.defaults.baseURL = `${import.meta.env.VITE_API_URL}/api`;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 // Initialize i18next
