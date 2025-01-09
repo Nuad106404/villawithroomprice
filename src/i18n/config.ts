@@ -1,8 +1,6 @@
-import i18n from 'i18next';
+import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import translations directly
 const en = {
   common: {
     villa: 'Villa',
@@ -56,8 +54,7 @@ const resources = {
   th: { translation: th }
 };
 
-i18n
-  .use(LanguageDetector)
+i18next
   .use(initReactI18next)
   .init({
     resources,
@@ -65,14 +62,11 @@ i18n
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage']
-    },
-    react: {
-      useSuspense: false
+    }
+  }, (err) => {
+    if (err) {
+      console.error('Error initializing i18next:', err);
     }
   });
 
-export default i18n;
+export default i18next;
