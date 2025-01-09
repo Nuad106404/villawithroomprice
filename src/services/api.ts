@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { CustomerInfo } from '../types/booking';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://miamibeachchaam.com/api',
   headers: {
     'Content-Type': 'application/json',
   },

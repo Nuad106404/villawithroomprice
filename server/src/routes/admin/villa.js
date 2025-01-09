@@ -250,7 +250,7 @@ router.patch('/background', upload.villa.single('backgroundImage'), async (req, 
     }
 
     // Update villa with new background image path
-    villa.backgroundImage = `http://localhost:5001/uploads/villa/${req.file.filename}`;
+    villa.backgroundImage = `http://miamibeachchaam.com/uploads/villa/${req.file.filename}`;
     console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
@@ -289,7 +289,7 @@ router.post('/background', upload.villa.single('backgroundImage'), async (req, r
     }
 
     // Update villa with new background image path
-    villa.backgroundImage = `http://localhost:5001/uploads/villa/${req.file.filename}`;
+    villa.backgroundImage = `http://miamibeachchaam.com/uploads/villa/${req.file.filename}`;
     console.log('Setting new image URL:', villa.backgroundImage);
     await villa.save();
 
@@ -332,7 +332,7 @@ router.post('/slides', upload.villa.array('slideImages', 10), async (req, res) =
     }
 
     // Update villa with new slide image paths
-    villa.slideImages = req.files.map(file => `http://localhost:5001/uploads/villa/${file.filename}`);
+    villa.slideImages = req.files.map(file => `http://miamibeachchaam.com/uploads/villa/${file.filename}`);
     console.log('Setting new slide image URLs:', villa.slideImages);
     await villa.save();
 
@@ -457,7 +457,7 @@ router.post('/promptpay-qr', upload.qr.single('qrImage'), async (req, res) => {
     if (!villa.promptPay) {
       villa.promptPay = {};
     }
-    villa.promptPay.qrImage = `http://localhost:5001/uploads/QR/${req.file.filename}`;
+    villa.promptPay.qrImage = `http://miamibeachchaam.com/uploads/QR/${req.file.filename}`;
     console.log('Setting new QR URL:', villa.promptPay.qrImage);
     await villa.save();
 
@@ -507,7 +507,7 @@ router.post('/rooms', upload.rooms.array('roomImages', 10), async (req, res) => 
       return res.status(404).json({ message: 'Villa not found' });
     }
 
-    const images = req.files ? req.files.map(file => `http://localhost:5001/uploads/rooms/${file.filename}`) : [];
+    const images = req.files ? req.files.map(file => `http://miamibeachchaam.com/uploads/rooms/${file.filename}`) : [];
     
     villa.rooms.push({
       name: JSON.parse(name),
@@ -546,7 +546,7 @@ router.patch('/rooms/:index', upload.rooms.array('roomImages', 10), async (req, 
           fs.unlinkSync(oldPath);
         }
       });
-      villa.rooms[index].images = req.files.map(file => `http://localhost:5001/uploads/rooms/${file.filename}`);
+      villa.rooms[index].images = req.files.map(file => `http://miamibeachchaam.com/uploads/rooms/${file.filename}`);
     }
 
     villa.rooms[index].name = JSON.parse(name);

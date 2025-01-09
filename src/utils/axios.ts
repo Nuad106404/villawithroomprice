@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api', // Updated to match server configuration
+  baseURL: 'http://miamibeachchaam.com/api', // Updated to match server configuration
   headers: {
     'Content-Type': 'application/json',
   },
