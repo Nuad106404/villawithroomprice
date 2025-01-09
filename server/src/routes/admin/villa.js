@@ -52,16 +52,7 @@ router.get('/', async (req, res) => {
           en: 'Direct access to the beach',
           th: 'เข้าถึงชายหาดได้โดยตรง'
         },
-        pricing: {
-          weekday: {
-            regular: 299,
-            discounted: 0
-          },
-          weekend: {
-            regular: 399,
-            discounted: 0
-          }
-        },
+        pricePerNight: 299,
         maxGuests: 6,
         bedrooms: 3,
         bathrooms: 3
@@ -134,8 +125,11 @@ router.patch('/', async (req, res) => {
       beachfront, 
       maxGuests, 
       bedrooms, 
-      bathrooms,
-      pricing,
+      minRooms,
+      bathrooms, 
+      pricePerNight, 
+      discountedPrice,
+      priceReductionPerRoom,
       bankDetails,
       promptPay
     } = req.body;
@@ -161,52 +155,31 @@ router.patch('/', async (req, res) => {
       };
     }
 
-    // Update pricing if provided
-    if (pricing) {
-      // Validate weekday pricing
-      if (pricing.weekday) {
-        if (pricing.weekday.regular !== undefined) {
-          if (pricing.weekday.regular < 0) {
-            return res.status(400).json({
-              message: 'Weekday regular price cannot be negative'
-            });
-          }
-          villa.pricing.weekday.regular = pricing.weekday.regular;
-        }
-        if (pricing.weekday.discounted !== undefined) {
-          if (pricing.weekday.discounted > pricing.weekday.regular) {
-            return res.status(400).json({
-              message: 'Weekday discounted price must be less than regular price'
-            });
-          }
-          villa.pricing.weekday.discounted = pricing.weekday.discounted;
-        }
-      }
-
-      // Validate weekend pricing
-      if (pricing.weekend) {
-        if (pricing.weekend.regular !== undefined) {
-          if (pricing.weekend.regular < 0) {
-            return res.status(400).json({
-              message: 'Weekend regular price cannot be negative'
-            });
-          }
-          villa.pricing.weekend.regular = pricing.weekend.regular;
-        }
-        if (pricing.weekend.discounted !== undefined) {
-          if (pricing.weekend.discounted > pricing.weekend.regular) {
-            return res.status(400).json({
-              message: 'Weekend discounted price must be less than regular price'
-            });
-          }
-          villa.pricing.weekend.discounted = pricing.weekend.discounted;
-        }
-      }
+    // Update pricePerNight if provided
+    if (pricePerNight !== undefined) {
+      villa.pricePerNight = pricePerNight;
     }
 
-    // Update maxGuests if provided
-    if (maxGuests !== undefined) {
-      villa.maxGuests = maxGuests;
+    // Update discountedPrice if provided
+    if (discountedPrice !== undefined) {
+      // Validate that discounted price is less than regular price
+      if (discountedPrice > 0 && discountedPrice >= pricePerNight) {
+        return res.status(400).json({
+          message: 'Discounted price must be less than regular price'
+        });
+      }
+      villa.discountedPrice = discountedPrice;
+    }
+
+    // Update minRooms if provided
+    if (minRooms !== undefined) {
+      // Validate that minRooms is not greater than bedrooms
+      if (minRooms > bedrooms) {
+        return res.status(400).json({
+          message: 'Minimum rooms cannot be greater than total bedrooms'
+        });
+      }
+      villa.minRooms = minRooms;
     }
 
     // Update bedrooms if provided
@@ -217,6 +190,16 @@ router.patch('/', async (req, res) => {
     // Update bathrooms if provided
     if (bathrooms !== undefined) {
       villa.bathrooms = bathrooms;
+    }
+
+    // Update priceReductionPerRoom if provided
+    if (priceReductionPerRoom !== undefined) {
+      villa.priceReductionPerRoom = priceReductionPerRoom;
+    }
+
+    // Update maxGuests if provided
+    if (maxGuests !== undefined) {
+      villa.maxGuests = maxGuests;
     }
 
     // Update bankDetails if provided

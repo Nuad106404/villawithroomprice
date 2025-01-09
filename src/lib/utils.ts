@@ -6,11 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(price: number): string {
-  const formatted = new Intl.NumberFormat('th-TH', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+  return new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: 'THB',
   }).format(price);
-  return `THB ${formatted}`;
 }
 
 export function calculateNights(checkIn: Date, checkOut: Date): number {

@@ -21,8 +21,10 @@ interface Villa {
   };
   pricePerNight: number;
   discountedPrice: number;
+  priceReductionPerRoom: number;
   maxGuests: number;
   bedrooms: number;
+  minRooms: number;
   bathrooms: number;
   bankDetails: Array<{
     bank: string;

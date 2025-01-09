@@ -7,24 +7,42 @@ interface CountdownTimerProps {
 
 export function useCountdownTimer({ startTime, endTime }: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(() => {
-    const remaining = new Date(endTime).getTime() - Date.now();
+    const end = new Date(endTime).getTime();
+    const now = Date.now();
+    const remaining = end - now;
     return remaining > 0 ? remaining : 0;
   });
 
   useEffect(() => {
+    // Reset timer when endTime changes
+    const end = new Date(endTime).getTime();
+    const now = Date.now();
+    const remaining = end - now;
+    setTimeLeft(remaining > 0 ? remaining : 0);
+
     const timer = setInterval(() => {
       setTimeLeft((current) => {
-        const newTime = Math.max(0, new Date(endTime).getTime() - Date.now());
-        return newTime;
+        const newTimeLeft = Math.max(0, new Date(endTime).getTime() - Date.now());
+        if (newTimeLeft === 0) {
+          clearInterval(timer);
+        }
+        return newTimeLeft;
       });
     }, 1000);
 
     return () => clearInterval(timer);
   }, [endTime]);
 
-  const hours = Math.floor(timeLeft / (60 * 60 * 1000));
-  const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-  const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+  const totalSeconds = Math.floor(timeLeft / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
-  return { hours, minutes, seconds, isExpired: timeLeft === 0 };
+  return {
+    hours,
+    minutes,
+    seconds,
+    isExpired: timeLeft === 0,
+    timeLeft
+  };
 }

@@ -31,19 +31,13 @@ interface FormData {
     en: string;
     th: string;
   };
-  pricing: {
-    weekday: {
-      regular: number;
-      discounted: number;
-    };
-    weekend: {
-      regular: number;
-      discounted: number;
-    };
-  };
+  pricePerNight: number;
+  discountedPrice: number;
+  priceReductionPerRoom: number;
   maxGuests: number;
   bedrooms: number;
   bathrooms: number;
+  minRooms: number;
   backgroundImage?: string;
   newBackgroundImage?: File;
   slideImages: string[];
@@ -66,13 +60,13 @@ const defaultFormData: FormData = {
   title: { en: '', th: '' },
   description: { en: '', th: '' },
   beachfront: { en: '', th: '' },
-  pricing: {
-    weekday: { regular: 0, discounted: 0 },
-    weekend: { regular: 0, discounted: 0 },
-  },
+  pricePerNight: 0,
+  discountedPrice: 0,
+  priceReductionPerRoom: 0,
   maxGuests: 6,
   bedrooms: 3,
   bathrooms: 3,
+  minRooms: 1,
   slideImages: [],
   rooms: []
 };
@@ -103,13 +97,13 @@ export default function AdminVilla() {
         title: villa.title || { en: '', th: '' },
         description: villa.description || { en: '', th: '' },
         beachfront: villa.beachfront || { en: '', th: '' },
-        pricing: villa.pricing || {
-          weekday: { regular: 0, discounted: 0 },
-          weekend: { regular: 0, discounted: 0 },
-        },
+        pricePerNight: villa.pricePerNight || 0,
+        discountedPrice: villa.discountedPrice || 0,
+        priceReductionPerRoom: villa.priceReductionPerRoom || 0,
         maxGuests: villa.maxGuests || 6,
         bedrooms: villa.bedrooms || 3,
         bathrooms: villa.bathrooms || 3,
+        minRooms: villa.minRooms || 1,
         backgroundImage: villa.backgroundImage,
         slideImages: villa.slideImages || [],
         rooms: villa.rooms || []
@@ -244,7 +238,19 @@ export default function AdminVilla() {
 
     try {
       const formDataToSubmit = {
-        ...formData,
+        name: formData.name,
+        title: formData.title,
+        description: formData.description,
+        beachfront: formData.beachfront,
+        pricePerNight: formData.pricePerNight,
+        discountedPrice: formData.discountedPrice,
+        priceReductionPerRoom: formData.priceReductionPerRoom,
+        maxGuests: formData.maxGuests,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        minRooms: formData.minRooms,
+        bankDetails: formData.bankDetails,
+        promptPay: formData.promptPay
       };
 
       const response = await axios.patch('/admin/villa', formDataToSubmit);
@@ -380,19 +386,6 @@ export default function AdminVilla() {
     }
   };
 
-  const handlePriceChange = (period: 'weekday' | 'weekend', type: 'regular' | 'discounted', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      pricing: {
-        ...prev.pricing,
-        [period]: {
-          ...prev.pricing[period],
-          [type]: parseFloat(value)
-        }
-      }
-    }));
-  };
-
   if (!villa && loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -494,66 +487,6 @@ export default function AdminVilla() {
                   <p className="mt-1 text-sm text-gray-500">
                     You can upload multiple images. Recommended size: 1920x1080px. Max file size: 5MB per image
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing Section */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium mb-4">{t('admin.villa.pricing')}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Weekday Pricing */}
-                <div className="space-y-4">
-                  <h4 className="font-medium">{t('admin.villa.weekdayPricing')}</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="weekdayRegularPrice">{t('admin.villa.regularPrice')}</Label>
-                      <Input
-                        id="weekdayRegularPrice"
-                        type="number"
-                        value={formData.pricing.weekday.regular || ''}
-                        onChange={(e) => handlePriceChange('weekday', 'regular', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="weekdayDiscountedPrice">{t('admin.villa.discountedPrice')}</Label>
-                      <Input
-                        id="weekdayDiscountedPrice"
-                        type="number"
-                        value={formData.pricing.weekday.discounted || ''}
-                        onChange={(e) => handlePriceChange('weekday', 'discounted', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Weekend Pricing */}
-                <div className="space-y-4">
-                  <h4 className="font-medium">{t('admin.villa.weekendPricing')}</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="weekendRegularPrice">{t('admin.villa.regularPrice')}</Label>
-                      <Input
-                        id="weekendRegularPrice"
-                        type="number"
-                        value={formData.pricing.weekend.regular || ''}
-                        onChange={(e) => handlePriceChange('weekend', 'regular', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="weekendDiscountedPrice">{t('admin.villa.discountedPrice')}</Label>
-                      <Input
-                        id="weekendDiscountedPrice"
-                        type="number"
-                        value={formData.pricing.weekend.discounted || ''}
-                        onChange={(e) => handlePriceChange('weekend', 'discounted', e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -668,6 +601,70 @@ export default function AdminVilla() {
               />
             </div>
 
+            {/* Price Per Night */}
+            <div className="space-y-2">
+              <Label htmlFor="pricePerNight">Price Per Night</Label>
+              <Input
+                id="pricePerNight"
+                type="number"
+                min={0}
+                step="0.01"
+                value={formData.pricePerNight}
+                onChange={(e) => {
+                  const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                  if (value >= 0) {
+                    handleInputChange('pricePerNight', value);
+                  }
+                }}
+                className="w-full"
+                required
+              />
+              <p className="text-sm text-gray-500">
+                Price per night for the villa
+              </p>
+            </div>
+
+            {/* Discounted Price */}
+            <div className="space-y-2">
+              <Label htmlFor="discountedPrice">Discounted Price</Label>
+              <Input
+                id="discountedPrice"
+                type="number"
+                min={0}
+                step="0.01"
+                value={formData.discountedPrice}
+                onChange={(e) => {
+                  const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                  if (value >= 0) {
+                    handleInputChange('discountedPrice', value);
+                  }
+                }}
+                className="w-full"
+                required
+              />
+              <p className="text-sm text-gray-500">
+                Discounted price per night for the villa
+              </p>
+            </div>
+
+            {/* Price Reduction Per Room */}
+            <div className="space-y-2">
+              <Label htmlFor="priceReductionPerRoom">Price Reduction Per Room</Label>
+              <Input
+                id="priceReductionPerRoom"
+                type="number"
+                min={0}
+                step="100"
+                value={formData.priceReductionPerRoom}
+                onChange={(e) => handleInputChange('priceReductionPerRoom', parseInt(e.target.value))}
+                className="w-full"
+                required
+              />
+              <p className="text-sm text-gray-500">
+                Price reduction per room
+              </p>
+            </div>
+
             {/* Max Guests */}
             <div className="space-y-2">
               <Label htmlFor="maxGuests">Maximum Number of Guests</Label>
@@ -693,14 +690,31 @@ export default function AdminVilla() {
                 id="bedrooms"
                 type="number"
                 min={1}
-                max={50}
                 value={formData.bedrooms}
                 onChange={(e) => handleInputChange('bedrooms', parseInt(e.target.value))}
                 className="w-full"
                 required
               />
               <p className="text-sm text-gray-500">
-                Number of bedrooms in the villa
+                Total number of bedrooms available
+              </p>
+            </div>
+
+            {/* Minimum Rooms */}
+            <div className="space-y-2">
+              <Label htmlFor="minRooms">Minimum Rooms Required</Label>
+              <Input
+                id="minRooms"
+                type="number"
+                min={1}
+                max={formData.bedrooms}
+                value={formData.minRooms}
+                onChange={(e) => handleInputChange('minRooms', parseInt(e.target.value))}
+                className="w-full"
+                required
+              />
+              <p className="text-sm text-gray-500">
+                Minimum number of rooms that must be booked
               </p>
             </div>
 

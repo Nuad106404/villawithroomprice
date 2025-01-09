@@ -74,6 +74,14 @@ export const deleteBooking = createAsyncThunk(
   }
 );
 
+export const sendConfirmationEmail = createAsyncThunk(
+  'booking/sendConfirmationEmail',
+  async (bookingId: string) => {
+    const response = await api.post(`/api/booking/${bookingId}/send-confirmation`);
+    return response.data;
+  }
+);
+
 const bookingSlice = createSlice({
   name: 'booking',
   initialState,
@@ -174,6 +182,18 @@ const bookingSlice = createSlice({
       .addCase(deleteBooking.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to delete booking';
+      })
+      // Send Booking Confirmation Email
+      .addCase(sendConfirmationEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendConfirmationEmail.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(sendConfirmationEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to send booking confirmation email';
       });
   },
 });

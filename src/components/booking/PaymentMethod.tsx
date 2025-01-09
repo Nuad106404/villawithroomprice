@@ -39,16 +39,16 @@ export function PaymentMethod() {
       }
 
       try {
-        const bookingData = await bookingApi.getBooking(id);
-        if (!bookingData) {
+        const response = await bookingApi.getBooking(id);
+        if (!response?.data?.booking) {
           toast.error(t('booking.errors.notFound'));
           navigate('/');
           return;
         }
-        setBooking(bookingData);
+        setBooking(response.data.booking);
         // If booking has payment slip, set confirmed state
-        if (bookingData.paymentSlipUrl) {
-          setPaymentSlipUrl(bookingData.paymentSlipUrl);
+        if (response.data.booking.paymentSlipUrl) {
+          setPaymentSlipUrl(response.data.booking.paymentSlipUrl);
           setIsPaymentConfirmed(true);
         }
       } catch (error) {
@@ -59,17 +59,39 @@ export function PaymentMethod() {
         setIsLoading(false);
       }
     }
-
     fetchBooking();
   }, [id, navigate, t]);
 
-  const handlePaymentMethodSelect = async (method: string) => {
+  if (isLoading) {
+    return (
+      <BookingLayout>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        </div>
+      </BookingLayout>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <BookingLayout>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            {t('booking.errors.notFound')}
+          </h2>
+          <Button onClick={() => navigate('/')} variant="outline">
+            {t('common.backToHome')}
+          </Button>
+        </div>
+      </BookingLayout>
+    );
+  }
+
+  const handlePaymentMethodSelect = async (method: 'bank_transfer' | 'promptpay') => {
     try {
-      await bookingApi.updateBooking(id, {
-        paymentMethod: method,
-        status: 'pending_payment'
-      });
-      navigate(`/booking/${id}/confirmation`);
+      await bookingApi.updatePaymentDetails(id!, method);
+      setSelectedMethod(method);
+      toast.success(t('booking.payment.methodSelected'));
     } catch (error) {
       console.error('Error updating payment method:', error);
       toast.error(t('booking.errors.updateFailed'));
@@ -82,52 +104,39 @@ export function PaymentMethod() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleConfirmPayment = async () => {
-    if (!selectedFile || isPaymentConfirmed) return;
-
+  const handleSlipUpload = async (file: File) => {
     try {
       setIsLoading(true);
-      const formData = new FormData();
-      formData.append('slip', selectedFile);
 
-      const response = await fetch('/api/upload/slip', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
+      // Upload the slip
+      const uploadResponse = await bookingApi.uploadPaymentSlip(file);
+      
+      if (!uploadResponse.status === 'success' || !uploadResponse.url) {
+        throw new Error('Failed to upload slip');
       }
 
-      const data = await response.json();
-      setPaymentSlipUrl(data.fileUrl);
-      setIsPaymentConfirmed(true);
+      // Update booking with slip URL
+      await bookingApi.updatePaymentDetails(id!, selectedMethod, uploadResponse.url);
       
-      // Update booking payment status
-      await bookingApi.updateBooking(id!, {
-        status: 'pending',
-        paymentDetails: {
-          method: selectedMethod,
-          slipUrl: data.fileUrl,
-          status: 'pending'
-        }
-      });
-
-      toast.success(t('payment.success.confirmed'));
+      setPaymentSlipUrl(uploadResponse.url);
+      setIsPaymentConfirmed(true);
+      toast.success(t('booking.payment.slipUploaded'));
+      
+      // Navigate to confirmation page
       navigate(`/booking/${id}/confirmation`);
     } catch (error) {
-      console.error('Error confirming payment:', error);
-      toast.error(t('payment.errors.confirmFailed'));
+      console.error('Error uploading slip:', error);
+      toast.error(t('booking.errors.uploadFailed'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading || !booking) {
-    return <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>;
-  }
+  const handleConfirmPayment = async () => {
+    if (!selectedFile || isPaymentConfirmed) return;
+
+    handleSlipUpload(selectedFile);
+  };
 
   return (
     <BookingLayout>
@@ -166,84 +175,24 @@ export function PaymentMethod() {
               >
                 {t('booking.payment.choosePreferred')}
               </motion.p>
-            </div>
-
-            {/* Booking Details Container */}
-            {booking && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6"
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t('booking.confirmation.details')}
-                      </h3>
-                    </div>
-                    <div>
-                      <span className="px-3 py-1 text-sm rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                        {t(`booking.confirmation.statusTypes.${booking.status}`)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.checkIn')}</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {new Date(booking.bookingDetails.checkIn).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.checkOut')}</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {new Date(booking.bookingDetails.checkOut).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.guests')}</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{booking.bookingDetails.guests}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.total')}</p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {new Intl.NumberFormat('th-TH', {
-                          style: 'currency',
-                          currency: 'THB',
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        }).format(booking.bookingDetails.totalPrice)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('booking.confirmation.customerInfo')}</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {`${booking.customerInfo.firstName} ${booking.customerInfo.lastName}`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
+              {booking && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-6"
+                >
                   <CountdownTimer
                     startTime={new Date(booking.createdAt)}
                     endTime={new Date(booking.expiresAt)}
                     onExpire={() => {
-                      toast.error(t('booking.payment.expired'));
+                      toast.error(t('booking.errors.expired'));
                       navigate('/');
                     }}
                   />
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </div>
 
             {/* Payment method selection */}
             <motion.div 
@@ -258,7 +207,7 @@ export function PaymentMethod() {
               <Button
                 type="button"
                 variant={selectedMethod === 'bank_transfer' ? 'default' : 'outline'}
-                onClick={() => setSelectedMethod('bank_transfer')}
+                onClick={() => handlePaymentMethodSelect('bank_transfer')}
                 className={cn(
                   "group relative",
                   "min-h-[100px] sm:min-h-[160px]",
@@ -295,7 +244,7 @@ export function PaymentMethod() {
                 <Button
                   type="button"
                   variant={selectedMethod === 'promptpay' ? 'default' : 'outline'}
-                  onClick={() => setSelectedMethod('promptpay')}
+                  onClick={() => handlePaymentMethodSelect('promptpay')}
                   className={cn(
                     "group relative",
                     "min-h-[100px] sm:min-h-[160px]",
@@ -349,24 +298,29 @@ export function PaymentMethod() {
                 <div className="relative space-y-8">
                   {selectedMethod === 'promptpay' ? (
                     <div className="space-y-8">
-                      <QRCode amount={booking.bookingDetails.totalPrice} />
+                      {booking?.bookingDetails?.totalPrice && (
+                        <QRCode amount={booking.bookingDetails.totalPrice} />
+                      )}
                       
                       <div className="w-full max-w-md mx-auto">
                         <div className="bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-6">
                           <h4 className="font-medium text-lg text-gray-900 dark:text-white mb-4">
                             {t('booking.payment.instructions')}
                           </h4>
-                          <ol className="list-decimal list-inside space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                            <li className="pl-2">{t('booking.payment.step1')}</li>
-                            <li className="pl-2">{t('booking.payment.step2')}</li>
-                            <li className="pl-2">{t('booking.payment.step3')}</li>
-                            <li className="pl-2">{t('booking.payment.step4')}</li>
+                          <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                            <li>{t('booking.payment.step1')}</li>
+                            <li>{t('booking.payment.step2')}</li>
+                            <li>{t('booking.payment.step3')}</li>
+                            <li>{t('booking.payment.step4')}</li>
                           </ol>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <PaymentDetails booking={{ customerInfo: booking.customerInfo, bookingDetails: booking }} />
+                    <div className="space-y-8">
+                      {/* Bank Transfer Details */}
+                      <PaymentDetails booking={booking} />
+                    </div>
                   )}
                 </div>
               </div>

@@ -4,11 +4,22 @@ const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export const api = axios.create({
   baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true
+  withCredentials: true,
 });
+
+// Add auth token to requests if it exists
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add request logging
 api.interceptors.request.use(

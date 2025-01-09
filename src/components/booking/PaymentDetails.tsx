@@ -2,27 +2,43 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
+import { Booking } from '../../types/booking';
 import { Button } from '../ui/button';
-import { toast } from 'react-toastify';
 import { QRCode } from './QRCode';
+import { toast } from 'react-toastify';
 
-export function PaymentDetails() {
+interface PaymentDetailsProps {
+  booking: Booking;
+}
+
+export function PaymentDetails({ booking }: PaymentDetailsProps) {
   const { t } = useTranslation();
   const villa = useSelector((state: RootState) => state.villa.villa);
   const bankDetails = villa?.bankDetails || [];
-  const booking = useSelector((state: RootState) => state.booking.booking);
-  const amount = booking?.totalAmount || 0;
+
+  const totalPrice = booking?.bookingDetails?.totalPrice;
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    toast.success(t('common.copied'));
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="space-y-8">
+        {/* Total Amount Display */}
+        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              {t('booking.payment.totalAmount')}
+            </span>
+            <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
+              ฿{totalPrice?.toLocaleString()}
+            </span>
+          </div>
+        </div>
 
-
+        {/* Bank Transfer Section */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             {t('booking.payment.bankTransfer')}
@@ -30,50 +46,30 @@ export function PaymentDetails() {
           
           <div className="space-y-4">
             {bankDetails.map((bank, index) => (
-              <div
+              <div 
                 key={index}
-                className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-4"
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700"
               >
-                <div className="flex flex-col">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {bank.bank}
-                  </h4>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-gray-900 dark:text-white">{bank.bank}</span>
+                  <button
+                    onClick={() => handleCopy(bank.accountNumber)}
+                    className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 text-sm"
+                  >
+                    {t('common.copy')}
+                  </button>
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {t('booking.payment.accountNumber')}
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {bank.accountNumber}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {t('booking.payment.accountName')}
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {bank.accountName}
-                    </span>
-                  </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <p>{bank.accountName}</p>
+                  <p>{bank.accountNumber}</p>
                 </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleCopy(bank.accountNumber)}
-                >
-                  {t('booking.payment.copyAccountNumber')}
-                </Button>
               </div>
             ))}
           </div>
         </div>
 
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          <p>{t('booking.payment.instructions')}</p>
+          <p>{t('common.paymentDetails')}</p>
         </div>
       </div>
     </div>

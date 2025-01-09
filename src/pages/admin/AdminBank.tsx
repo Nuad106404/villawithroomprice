@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { fetchVillaDetails, updateVillaDetails } from '../../store/slices/villaSlice';
-import { Card } from '../../components/ui/card';
+import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Button } from '../../components/ui/button';

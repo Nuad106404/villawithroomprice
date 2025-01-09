@@ -36,8 +36,8 @@ export function VillaReviews() {
         <h2 className="text-2xl font-semibold">Guest Reviews</h2>
         <div className="flex items-center space-x-2">
           <Star className="w-5 h-5 text-amber-400 fill-current" />
-          <span className="font-medium">4.8</span>
-          <span className="text-gray-500 dark:text-gray-400">({reviews.length} reviews)</span>
+          <span className="font-medium">4.9</span>
+          <span className="text-gray-500 dark:text-gray-400">(128 reviews)</span>
         </div>
       </div>
 

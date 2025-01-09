@@ -11,8 +11,8 @@ interface SlipUploadProps {
 }
 
 export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps) {
-  const { t } = useTranslation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,7 +68,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                {t('booking.slip.upload.dragAndDrop')}
+                {t('booking.slip.upload.description')}
               </p>
             </div>
           </motion.div>
@@ -84,7 +84,7 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                 <div className="flex-shrink-0">
                   <img
                     src={URL.createObjectURL(uploadedFile)}
-                    alt={t('booking.slip.preview')}
+                    alt="Payment Slip Preview"
                     className="h-16 w-16 object-cover rounded"
                   />
                 </div>
@@ -93,14 +93,13 @@ export function SlipUpload({ onUpload, onRemove, uploadedFile }: SlipUploadProps
                     {uploadedFile.name}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} {t('booking.slip.fileSize')}
+                    {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
               <button
                 onClick={onRemove}
                 className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                aria-label={t('booking.slip.remove')}
               >
                 <X className="h-5 w-5" />
               </button>

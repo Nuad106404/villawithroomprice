@@ -71,12 +71,13 @@ export function CustomerInfoForm() {
       }
 
       try {
-        const bookingData = await bookingApi.getBooking(id);
-        if (!bookingData) {
+        const response = await bookingApi.getBooking(id);
+        if (!response || !response.data?.booking) {
           toast.error(t('booking.errors.notFound'));
           navigate('/');
           return;
         }
+        const bookingData = response.data.booking;
         setBooking(bookingData);
         if (bookingData.customerInfo) {
           setFormData(bookingData.customerInfo);
@@ -96,18 +97,21 @@ export function CustomerInfoForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate form data
     const errors: Partial<Record<keyof CustomerInfo, string>> = {};
     if (!formData.firstName.trim()) errors.firstName = t('booking.errors.required');
     if (!formData.lastName.trim()) errors.lastName = t('booking.errors.required');
     if (!formData.email.trim()) errors.email = t('booking.errors.required');
     if (!formData.phone.trim()) errors.phone = t('booking.errors.required');
     
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       errors.email = t('booking.errors.invalidEmail');
     }
     
-    const phoneRegex = /^\d{10}$/;
+    // Phone validation (accepting international formats)
+    const phoneRegex = /^\+?[\d\s-]{8,}$/;
     if (formData.phone && !phoneRegex.test(formData.phone)) {
       errors.phone = t('booking.errors.invalidPhone');
     }
@@ -119,15 +123,24 @@ export function CustomerInfoForm() {
 
     try {
       setIsLoading(true);
-      await bookingApi.updateBooking(id!, {
-        customerInfo: formData
+      const response = await bookingApi.updateCustomerInfo(id!, {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim()
       });
-      setIsSubmitted(true);
-      toast.success(t('booking.success.customerInfo'));
-      navigate(`/booking/${id}/payment`);
+
+      if (response.status === 'success') {
+        setIsSubmitted(true);
+        toast.success(t('booking.success.customerInfo'));
+        // Navigate to payment page after successful update
+        navigate(`/booking/${id}/payment`);
+      } else {
+        throw new Error(response.message || 'Failed to update booking');
+      }
     } catch (error) {
-      console.error('Error updating booking:', error);
-      toast.error(t('booking.errors.updateFailed'));
+      console.error('Error updating customer info:', error);
+      toast.error(error.message || t('booking.errors.updateFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -135,6 +148,10 @@ export function CustomerInfoForm() {
 
   const handleInputChange = (id: keyof CustomerInfo, value: string) => {
     setFormData(prev => ({ ...prev, [id]: value }));
+    // Clear error when user starts typing
+    if (formErrors[id]) {
+      setFormErrors(prev => ({ ...prev, [id]: '' }));
+    }
   };
 
   const handleBack = () => {
@@ -327,54 +344,46 @@ export function CustomerInfoForm() {
                 <motion.div
                   key={field.id}
                   variants={itemVariants}
-                  className="relative"
+                  className="mb-6 last:mb-0"
                 >
-                  <label 
+                  <label
                     htmlFor={field.id}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
                   >
                     {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
-                  <div className={`
-                    relative rounded-xl overflow-hidden
-                    ${activeField === field.id ? 'ring-2 ring-amber-500 dark:ring-amber-400' : ''}
-                  `}>
-                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                      <field.icon className={`
-                        h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200
-                        ${activeField === field.id ? 'text-amber-500' : 'text-gray-400'}
-                      `} />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <field.icon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                     </div>
                     <input
                       type={field.type}
                       id={field.id}
+                      name={field.id}
                       value={formData[field.id]}
                       onChange={(e) => handleInputChange(field.id, e.target.value)}
-                      onFocus={() => setActiveField(field.id)}
-                      onBlur={() => setActiveField(null)}
+                      className={`
+                        block w-full pl-10 py-2.5 sm:text-sm rounded-lg
+                        dark:bg-gray-700 dark:text-white dark:border-gray-600
+                        ${formErrors[field.id] 
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                          : 'border-gray-300 focus:ring-amber-500 focus:border-amber-500'
+                        }
+                        transition-colors duration-200
+                      `}
                       placeholder={field.placeholder}
-                      required={field.required}
-                      className="
-                        block w-full 
-                        pl-10 sm:pl-12 pr-3 sm:pr-4 
-                        py-2.5 sm:py-3
-                        text-sm sm:text-base
-                        bg-white dark:bg-gray-800 
-                        border border-gray-200 dark:border-gray-700
-                        focus:outline-none
-                        transition-all duration-200
-                        placeholder-gray-400 dark:placeholder-gray-500
-                      "
                     />
-                    <div className={`
-                      absolute bottom-0 left-0 h-0.5 bg-amber-500
-                      transition-all duration-300 ease-out
-                      ${activeField === field.id ? 'w-full' : 'w-0'}
-                    `} />
+                    {formErrors[field.id] && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 text-sm text-red-600 dark:text-red-400"
+                      >
+                        {formErrors[field.id]}
+                      </motion.p>
+                    )}
                   </div>
-                  {formErrors[field.id] && (
-                    <p className="text-xs text-red-500 mt-1">{formErrors[field.id]}</p>
-                  )}
                 </motion.div>
               ))}
             </AnimatePresence>

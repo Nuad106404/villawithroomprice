@@ -52,14 +52,26 @@ const upload = multer({
 router.post('/slip', upload.single('slip'), (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({
+        status: 'error',
+        message: 'No file uploaded'
+      });
     }
 
-    // Return the file URL
-    const fileUrl = `/uploads/slips/${req.file.filename}`;
-    res.json({ fileUrl });
+    // Get the file path relative to the uploads directory
+    const relativePath = req.file.path.split('uploads/')[1];
+    const fileUrl = `/uploads/${relativePath}`;
+
+    res.json({
+      status: 'success',
+      url: fileUrl
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error uploading slip:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error uploading file'
+    });
   }
 });
 

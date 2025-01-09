@@ -2,3 +2,23 @@
 2024-12-24 00:14:08:148 [31merror[39m: [31mError creating booking: Please provide all required customer information: firstName, lastName, email, and phone[39m
 2024-12-24 00:15:27:1527 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m
 2024-12-24 00:15:31:1531 [31merror[39m: [31mError creating booking: Booking.checkAvailability is not a function[39m
+2025-01-07 20:19:55:1955 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:20:10:2010 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:20:27:2027 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:21:09:219 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:25:44:2544 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:27:38:2738 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:28:14:2814 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:29:54:2954 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:31:25:3125 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 22:02:42:242 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:02:50:250 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:51:12:5112 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:53:57:5357 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:54:08:548 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:07:33:733 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:10:17:1017 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:14:36:1436 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:14:36:1436 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:16:31:1631 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:16:31:1631 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m

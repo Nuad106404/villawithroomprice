@@ -9,6 +9,7 @@ import publicBookingRoutes from './src/routes/public/bookings.js';
 import uploadRoutes from './src/routes/upload.js';
 import adminRoutes from './src/routes/admin/index.js';
 import villaRoutes from './src/routes/villa.js';
+import bookingRoutes from './src/routes/bookingRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -54,10 +55,11 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/bookings', publicBookingRoutes);
+app.use('/api/public/bookings', publicBookingRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/villa', villaRoutes);
+app.use('/api/booking', bookingRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

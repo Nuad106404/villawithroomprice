@@ -10,14 +10,31 @@ const api = axios.create({
 
 export interface BookingData {
   _id?: string;
-  customerInfo: CustomerInfo;
+  customerInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
   bookingDetails: {
-    checkIn: Date;
-    checkOut: Date;
-    guests: number;
+    checkIn: Date | string;
+    checkOut: Date | string;
+    rooms: number;
     totalPrice: number;
   };
-  status: 'pending' | 'confirmed' | 'cancelled';
+  paymentMethod: 'bank_transfer' | 'promptpay';
+  specialRequests?: string;
+  status?: 'pending' | 'confirmed' | 'cancelled';
+}
+
+export interface BookingResponse {
+  status: 'success' | 'error';
+  data?: BookingData;
+  message?: string;
+  errors?: Array<{
+    msg: string;
+    path: string;
+  }>;
 }
 
 // Villa API functions
@@ -142,13 +159,24 @@ export const villaApi = {
 
 // Booking API functions
 export const bookingApi = {
-  createBooking: async (bookingData: BookingData) => {
+  createBooking: async (bookingData: BookingData): Promise<BookingResponse> => {
     try {
-      const response = await api.post('/bookings', bookingData);
-      return response.data;
+      // Remove customerInfo from initial booking creation
+      const { customerInfo, ...bookingDataWithoutCustomer } = bookingData;
+      
+      console.log('API: Creating booking with data:', JSON.stringify(bookingDataWithoutCustomer, null, 2));
+      const response = await api.post('/booking', bookingDataWithoutCustomer);
+      console.log('API: Received response:', JSON.stringify(response.data, null, 2));
+      
+      if (response.data?.status === 'success') {
+        return response.data;
+      }
+      throw new Error(response.data?.message || 'Failed to create booking');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to create booking');
+      console.error('API: Error creating booking:', error);
+      if (axios.isAxiosError(error) && error.response?.data) {
+        console.error('API: Error details:', JSON.stringify(error.response.data, null, 2));
+        throw new Error(error.response.data.message || 'Failed to create booking');
       }
       throw error;
     }
@@ -156,12 +184,18 @@ export const bookingApi = {
 
   updateBooking: async (id: string, data: Partial<BookingData>) => {
     try {
-      const endpoint = data.paymentDetails ? `/bookings/${id}/payment` : `/bookings/${id}/customer-info`;
-      const response = await api.patch(endpoint, data);
-      return response.data;
+      console.log('API: Updating booking with data:', JSON.stringify(data, null, 2));
+      const response = await api.patch(`/booking/${id}`, data);
+      
+      if (response.data?.status === 'success') {
+        return response.data;
+      }
+      throw new Error(response.data?.message || 'Failed to update booking');
     } catch (error) {
+      console.error('API: Error updating booking:', error);
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Failed to update booking');
+        const errorMessage = error.response?.data?.message || 'Failed to update booking';
+        throw new Error(errorMessage);
       }
       throw error;
     }
@@ -169,7 +203,7 @@ export const bookingApi = {
 
   getBooking: async (id: string) => {
     try {
-      const response = await api.get(`/bookings/${id}`);
+      const response = await api.get(`/booking/${id}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -181,7 +215,7 @@ export const bookingApi = {
 
   getAllBookings: async () => {
     try {
-      const response = await api.get('/bookings');
+      const response = await api.get('/booking/all');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -191,9 +225,9 @@ export const bookingApi = {
     }
   },
 
-  updateBookingStatus: async (id: string, status: 'pending' | 'confirmed' | 'cancelled') => {
+  updateBookingStatus: async (id: string, status: string) => {
     try {
-      const response = await api.patch(`/bookings/${id}`, { status });
+      const response = await api.patch(`/booking/${id}`, { status });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -204,8 +238,73 @@ export const bookingApi = {
   },
 
   deleteBooking: async (id: string) => {
-    const response = await api.delete(`/admin/bookings/${id}`);
+    const response = await api.delete(`/booking/${id}`);
     return response.data;
+  },
+
+  // Update payment details
+  async updatePaymentDetails(id: string, paymentMethod: 'bank_transfer' | 'promptpay', paymentSlipUrl?: string) {
+    try {
+      const response = await api.patch(`/booking/${id}`, {
+        paymentMethod,
+        paymentSlipUrl,
+        status: paymentSlipUrl ? 'in_review' : 'pending_payment'
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw error.response.data;
+      }
+      throw error;
+    }
+  },
+
+  // Upload payment slip
+  async uploadPaymentSlip(file: File) {
+    const formData = new FormData();
+    formData.append('slip', file);
+
+    try {
+      const response = await api.post('/upload/slip', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw error.response.data;
+      }
+      throw error;
+    }
+  },
+
+  // Update customer info
+  async updateCustomerInfo(id: string, customerInfo: CustomerInfo) {
+    try {
+      const response = await api.patch(`/booking/${id}/customer-info`, {
+        customerInfo
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw error.response.data;
+      }
+      throw error;
+    }
+  },
+
+  // Send booking confirmation email
+  async sendConfirmationEmail(id: string) {
+    try {
+      const response = await api.post(`/booking/${id}/send-confirmation`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw error.response.data;
+      }
+      throw error;
+    }
   },
 };
 

@@ -22,7 +22,10 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminBookings = lazy(() => import('./pages/admin/AdminBookings'));
 const AdminVilla = lazy(() => import('./pages/admin/AdminVilla'));
 const AdminBank = lazy(() => import('./pages/admin/AdminBank'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminRegister = lazy(() => import('./pages/admin/AdminRegister'));
 const DashboardLayout = lazy(() => import('./components/admin/DashboardLayout').then(module => ({ default: module.default })));
+const ProtectedRoute = lazy(() => import('./components/auth/ProtectedRoute'));
 
 function HomePage() {
   return (
@@ -75,13 +78,25 @@ function AppContent() {
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/booking" element={<BookingPage />} />
-            <Route path="/booking/:id" element={<CustomerInfoForm />} />
+            <Route path="/booking/:id/customer-info" element={<CustomerInfoForm />} />
             <Route path="/booking/:id/payment" element={<PaymentMethod />} />
             <Route path="/booking/:id/confirmation" element={<BookingConfirmation />} />
             
-            {/* Admin Routes */}
-            <Route path="/admin" element={<DashboardLayout />}>
+            {/* Admin Auth Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/register" element={<AdminRegister />} />
+            
+            {/* Protected Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<AdminDashboard />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="bank" element={<AdminBank />} />
               <Route path="villa" element={<AdminVilla />} />
               <Route path="bookings" element={<AdminBookings />} />

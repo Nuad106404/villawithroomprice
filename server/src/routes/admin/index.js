@@ -1,11 +1,15 @@
 import express from 'express';
 import Booking from '../../models/Booking.js';
 import villaRoutes from './villa.js';
+import authRoutes from './auth.js';
 
 const router = express.Router();
 
 // Mount villa routes
 router.use('/villa', villaRoutes);
+
+// Mount auth routes
+router.use('/auth', authRoutes);
 
 // Get dashboard stats
 router.get('/stats', async (req, res) => {

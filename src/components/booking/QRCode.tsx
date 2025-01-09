@@ -5,6 +5,7 @@ import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
+import { useTranslation } from 'react-i18next';
 
 interface QRCodeProps {
   amount: number;
@@ -13,6 +14,7 @@ interface QRCodeProps {
 export function QRCode({ amount }: QRCodeProps) {
   const villa = useSelector((state: RootState) => state.villa.villa);
   const qrImage = villa?.promptPay?.qrImage;
+  const { t } = useTranslation();
 
   // Ensure amount is a valid number
   const safeAmount = typeof amount === 'number' ? amount : 0;
@@ -92,7 +94,7 @@ export function QRCode({ amount }: QRCodeProps) {
       >
         <Download className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform duration-300" />
         <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-          Download QR Code
+          {t('common.downloadqrcode')}
         </span>
       </Button>
     </motion.div>

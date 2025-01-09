@@ -25,30 +25,33 @@ const bookingSchema = new mongoose.Schema({
       type: Date,
       required: [true, 'Check-out date is required']
     },
-    guests: {
+    rooms: {
       type: Number,
-      required: [true, 'Number of guests is required'],
-      min: [1, 'Number of guests must be at least 1'],
+      required: [true, 'Number of rooms is required'],
+      min: [1, 'Number of rooms must be at least 1'],
       validate: {
         validator: async function(value) {
           try {
-            // Get the Villa model
-            const Villa = mongoose.model('Villa');
+            if (value < 1) return false;
             
-            // Find the villa
-            const villa = await Villa.findOne();
+            const Villa = mongoose.model('Villa');
+            const villa = await Villa.findOne({ isActive: true });
             if (!villa) {
-              return false;
+              // If no villa exists, allow booking if rooms is 1
+              return value === 1;
             }
-
-            // Check if guests exceed villa's maxGuests
-            return value <= villa.maxGuests;
+            return value <= villa.bedrooms;
           } catch (error) {
-            console.error('Error validating guests:', error);
+            console.error('Error validating rooms:', error);
             return false;
           }
         },
-        message: 'Number of guests cannot exceed villa capacity'
+        message: props => {
+          if (props.value < 1) {
+            return 'Number of rooms must be at least 1';
+          }
+          return 'Number of rooms cannot exceed villa capacity';
+        }
       }
     },
     totalPrice: {
@@ -59,18 +62,23 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: {
-      values: ['pending', 'pending_payment', 'in_review', 'confirmed', 'cancelled', 'expired', 'checked_in', 'checked_out'],
-      message: '{VALUE} is not a valid status'
-    },
-    default: 'pending'
+    enum: [
+      'pending',
+      'pending_payment',
+      'in_review',
+      'confirmed',
+      'cancelled',
+      'expired',
+      'checked_in',
+      'checked_out'
+    ],
+    default: 'pending',
+    index: true
   },
   paymentMethod: {
     type: String,
-    enum: {
-      values: ['bank_transfer', 'promptpay'],
-      message: '{VALUE} is not a valid payment method'
-    }
+    enum: ['bank_transfer', 'promptpay'],
+    required: [true, 'Payment method is required']
   },
   paymentSlipUrl: {
     type: String
@@ -170,6 +178,52 @@ bookingSchema.statics.cleanupExpired = async function() {
     expiresAt: { $lt: now },
     paymentSlipUrl: { $exists: false }
   });
+};
+
+// Static method to check availability
+bookingSchema.statics.checkAvailability = async function(checkIn, checkOut) {
+  try {
+    console.log('Checking availability for:', { checkIn, checkOut });
+    
+    // Find any overlapping bookings
+    const overlappingBookings = await this.find({
+      'bookingDetails.checkIn': { $lt: checkOut },
+      'bookingDetails.checkOut': { $gt: checkIn },
+      status: { $nin: ['cancelled', 'rejected'] }
+    });
+
+    // Get villa capacity
+    const Villa = mongoose.model('Villa');
+    const villa = await Villa.findOne({ isActive: true });
+    const maxRooms = villa ? villa.bedrooms : 1;
+
+    // Calculate total booked rooms for each day
+    const bookedRoomsByDay = new Map();
+    for (const booking of overlappingBookings) {
+      const start = new Date(Math.max(booking.bookingDetails.checkIn, checkIn));
+      const end = new Date(Math.min(booking.bookingDetails.checkOut, checkOut));
+      
+      for (let day = start; day < end; day.setDate(day.getDate() + 1)) {
+        const key = day.toISOString().split('T')[0];
+        const currentRooms = bookedRoomsByDay.get(key) || 0;
+        bookedRoomsByDay.set(key, currentRooms + booking.bookingDetails.rooms);
+      }
+    }
+
+    // Check if any day exceeds capacity
+    for (const [day, rooms] of bookedRoomsByDay) {
+      if (rooms >= maxRooms) {
+        console.log('No availability for day:', day, 'rooms:', rooms, 'maxRooms:', maxRooms);
+        return false;
+      }
+    }
+
+    console.log('Dates are available');
+    return true;
+  } catch (error) {
+    console.error('Error checking availability:', error);
+    return false;
+  }
 };
 
 const Booking = mongoose.model('Booking', bookingSchema);

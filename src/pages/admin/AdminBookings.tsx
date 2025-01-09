@@ -1,7 +1,13 @@
 import { useCallback, useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { fetchBookings, updateBooking, updateBookingStatus, deleteBooking } from '../../store/slices/bookingSlice';
+import { 
+  fetchBookings, 
+  updateBooking, 
+  updateBookingStatus, 
+  deleteBooking,
+  sendConfirmationEmail 
+} from '../../store/slices/bookingSlice';
 import {
   Dialog,
   DialogContent,
@@ -39,8 +45,18 @@ import { X } from 'lucide-react';
 import { Pagination } from '../../components/ui/pagination';
 import { VisuallyHidden } from '../../components/ui/visually-hidden';
 import { Download } from 'lucide-react';
+import { Users } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
-type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'in_review';
+type BookingStatus = 
+  | 'pending' 
+  | 'pending_payment' 
+  | 'in_review' 
+  | 'confirmed' 
+  | 'cancelled' 
+  | 'expired' 
+  | 'checked_in' 
+  | 'checked_out';
 
 interface Booking {
   _id: string;
@@ -53,7 +69,7 @@ interface Booking {
   bookingDetails: {
     checkIn: string;
     checkOut: string;
-    guests: number;
+    rooms: number;
     totalPrice: number;
   };
   status: BookingStatus;
@@ -72,35 +88,44 @@ interface EditForm {
   bookingDetails: {
     checkIn: string;
     checkOut: string;
-    guests: number;
+    rooms: number;
     totalPrice: number;
   };
 }
 
-const STATUS_COLORS = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-  completed: 'bg-blue-100 text-blue-800',
-  in_review: 'bg-purple-100 text-purple-800',
-} as const;
+const statusOptions = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'pending_payment', label: 'Pending Payment' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'checked_in', label: 'Checked In' },
+  { value: 'checked_out', label: 'Checked Out' },
+];
 
-const STATUS_ACTIONS = {
-  pending: [
-    { label: 'Confirm Booking', value: 'confirmed' },
-    { label: 'Cancel Booking', value: 'cancelled' },
-  ],
-  confirmed: [
-    { label: 'Mark as Completed', value: 'completed' },
-    { label: 'Cancel Booking', value: 'cancelled' },
-  ],
-  in_review: [
-    { label: 'Confirm Booking', value: 'confirmed' },
-    { label: 'Cancel Booking', value: 'cancelled' },
-  ],
-  cancelled: [],
-  completed: [],
-} as const;
+const getStatusBadgeColor = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'pending_payment':
+      return 'bg-orange-100 text-orange-800';
+    case 'in_review':
+      return 'bg-blue-100 text-blue-800';
+    case 'confirmed':
+      return 'bg-green-100 text-green-800';
+    case 'cancelled':
+      return 'bg-red-100 text-red-800';
+    case 'expired':
+      return 'bg-gray-100 text-gray-800';
+    case 'checked_in':
+      return 'bg-purple-100 text-purple-800';
+    case 'checked_out':
+      return 'bg-indigo-100 text-indigo-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
 export default function AdminBookings() {
   const dispatch = useDispatch<AppDispatch>();
@@ -197,20 +222,20 @@ export default function AdminBookings() {
     }
   }, [dispatch, selectedBooking, editForm, handleCloseEdit]);
 
-  const handleStatusChange = useCallback(async (bookingId: string, newStatus: BookingStatus) => {
-    try {
-      await dispatch(updateBookingStatus({
-        bookingId,
-        status: newStatus,
-      })).unwrap();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-      toast.success('Status updated successfully');
-      handleCloseView();
-      dispatch(fetchBookings()); // Refresh the list
+  const handleStatusChange = useCallback(async (bookingId: string, newStatus: string) => {
+    try {
+      setIsUpdating(true);
+      await dispatch(updateBookingStatus({ bookingId, status: newStatus })).unwrap();
+      toast.success('Booking status updated successfully');
     } catch (error) {
-      toast.error('Failed to update status');
+      console.error('Error updating booking status:', error);
+      toast.error('Failed to update booking status');
+    } finally {
+      setIsUpdating(false);
     }
-  }, [dispatch, handleCloseView]);
+  }, [dispatch]);
 
   const handleDeleteBooking = useCallback(async (id: string) => {
     try {
@@ -312,13 +337,13 @@ export default function AdminBookings() {
   }, []);
 
   const getStatusBadge = useCallback((status: BookingStatus) => (
-    <Badge className={STATUS_COLORS[status]}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <Badge className={getStatusBadgeColor(status)}>
+      {status.replace('_', ' ').charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
     </Badge>
   ), []);
 
   const getAvailableActions = useCallback((status: BookingStatus) =>
-    STATUS_ACTIONS[status] || [], []);
+    statusOptions.filter((option) => option.value !== status), []);
 
   const handleDownloadSlip = async (url: string) => {
     try {
@@ -347,6 +372,15 @@ export default function AdminBookings() {
     } catch (error) {
       console.error('Error downloading slip:', error);
       toast.error('Failed to download payment slip');
+    }
+  };
+
+  const handleSendConfirmation = async (bookingId: string) => {
+    try {
+      await dispatch(sendConfirmationEmail(bookingId));
+      toast.success('Confirmation email sent successfully');
+    } catch (error) {
+      toast.error('Failed to send confirmation email');
     }
   };
 
@@ -417,7 +451,7 @@ export default function AdminBookings() {
                   )}
                 </TableHead>
                 <TableHead>Check Out</TableHead>
-                <TableHead>Guests</TableHead>
+                <TableHead>Rooms</TableHead>
                 <TableHead>Total Price</TableHead>
                 <TableHead
                   onClick={() => handleSort('status')}
@@ -466,13 +500,24 @@ export default function AdminBookings() {
                         ? dayjs(booking.bookingDetails.checkOut).format('MMM D, YYYY')
                         : 'N/A'}
                     </TableCell>
-                    <TableCell>{booking.bookingDetails?.guests || 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-2 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          {booking.bookingDetails.rooms} 
+                        </span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {typeof booking.bookingDetails?.totalPrice === 'number'
                         ? `฿${booking.bookingDetails.totalPrice.toLocaleString()}`
                         : 'N/A'}
                     </TableCell>
-                    <TableCell>{booking.status ? getStatusBadge(booking.status) : 'N/A'}</TableCell>
+                    <TableCell>
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(booking.status)}`}>
+                        {booking.status.replace('_', ' ').charAt(0).toUpperCase() + booking.status.slice(1).replace('_', ' ')}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="relative">
                         <DropdownMenu>
@@ -489,19 +534,34 @@ export default function AdminBookings() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => handleStatusChange(booking._id, 'pending')}>
-                              Mark as Pending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleStatusChange(booking._id, 'confirmed')}>
-                              Mark as Confirmed
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleStatusChange(booking._id, 'cancelled')}>
-                              Mark as Cancelled
-                            </DropdownMenuItem>
+                            {getAvailableActions(booking.status).map((action) => (
+                              <DropdownMenuItem
+                                key={action.value}
+                                onClick={() => handleStatusChange(booking._id, action.value)}
+                              >
+                                {action.label}
+                              </DropdownMenuItem>
+                            ))}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onSelect={() => handleDeleteBooking(booking._id)}
+                            <DropdownMenuItem
+                              onClick={() => handleSendConfirmation(booking._id)}
+                              className="gap-2"
+                            >
+                              <Mail className="h-4 w-4" />
+                              Send Confirmation Email
+                            </DropdownMenuItem>
+                            {booking.paymentSlipUrl && (
+                              <DropdownMenuItem
+                                onClick={() => window.open(booking.paymentSlipUrl, '_blank')}
+                                className="gap-2"
+                              >
+                                <Download className="h-4 w-4" />
+                                View Payment Slip
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
                               className="text-red-600"
+                              onClick={() => handleDeleteBooking(booking._id)}
                             >
                               Delete Booking
                             </DropdownMenuItem>
@@ -596,9 +656,11 @@ export default function AdminBookings() {
                           <span className="font-medium">Check Out: </span>
                           <span>{new Date(selectedBooking.bookingDetails.checkOut).toLocaleDateString()}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Guests: </span>
-                          <span>{selectedBooking.bookingDetails.guests}</span>
+                        <div className="flex items-center">
+                          <Users className="w-4 h-4 mr-2 text-gray-500" />
+                          <span className="text-sm text-gray-600">
+                            {selectedBooking.bookingDetails.rooms} 
+                          </span>
                         </div>
                         <div>
                           <span className="font-medium">Total Price: </span>
@@ -718,13 +780,13 @@ export default function AdminBookings() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="guests">Guests</Label>
+                      <Label htmlFor="rooms">Rooms</Label>
                       <Input
-                        id="guests"
+                        id="rooms"
                         type="number"
                         min="1"
-                        value={editForm?.bookingDetails.guests || ''}
-                        onChange={(e) => handleInputChange('bookingDetails', 'guests', parseInt(e.target.value))}
+                        value={editForm?.bookingDetails.rooms || ''}
+                        onChange={(e) => handleInputChange('bookingDetails', 'rooms', parseInt(e.target.value))}
                         required
                       />
                     </div>

@@ -18,3 +18,134 @@
 2024-12-24 00:16:35:1635 [32minfo[39m: [32mNew booking created with ID: 67699af371a5bf20fa4c0f0a[39m
 2024-12-24 00:16:47:1647 [32minfo[39m: [32mReceived booking request with body:[39m
 2024-12-24 00:16:48:1648 [32minfo[39m: [32mNew booking created with ID: 67699b0071a5bf20fa4c0f0f[39m
+2025-01-07 20:19:55:1955 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:19:55:1955 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:20:10:2010 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:20:10:2010 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:20:27:2027 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:20:27:2027 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:21:09:219 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:21:09:219 [31merror[39m: [31mError sending confirmation email: connect ECONNREFUSED 127.0.0.1:587[39m
+2025-01-07 20:25:43:2543 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:25:44:2544 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:27:36:2736 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:27:38:2738 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:28:11:2811 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:28:14:2814 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:29:51:2951 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:29:54:2954 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:31:23:3123 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:31:25:3125 [31merror[39m: [31mError sending confirmation email: Missing credentials for "PLAIN"[39m
+2025-01-07 20:36:12:3612 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:36:12:3612 [32minfo[39m: [32mFound booking:[39m
+2025-01-07 20:36:16:3616 [32minfo[39m: [32mConfirmation email sent successfully for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:54:46:5446 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 20:54:47:5447 [32minfo[39m: [32mFound booking:[39m
+2025-01-07 20:54:51:5451 [32minfo[39m: [32mConfirmation email sent successfully for booking ID: 677d2c957ffd21ff88e85f5e[39m
+2025-01-07 21:05:45:545 [32minfo[39m: [32mNew booking created with ID: 677d3bc103e5feccd3ccb45d[39m
+2025-01-07 21:06:02:62 [32minfo[39m: [32mNew booking created with ID: 677d3bd203e5feccd3ccb491[39m
+2025-01-07 21:08:22:822 [32minfo[39m: [32mNew booking created with ID: 677d3c5e03e5feccd3ccb4c9[39m
+2025-01-07 21:11:12:1112 [32minfo[39m: [32mNew booking created with ID: 677d3d07c2e9babb8365916d[39m
+2025-01-07 21:13:29:1329 [32minfo[39m: [32mNew booking created with ID: 677d3d91c2e9babb836591ad[39m
+2025-01-07 21:14:12:1412 [32minfo[39m: [32mNew booking created with ID: 677d3dbcc2e9babb836591d5[39m
+2025-01-07 21:17:05:175 [32minfo[39m: [32mNew booking created with ID: 677d3e69c2e9babb8365921c[39m
+2025-01-07 21:20:41:2041 [32minfo[39m: [32mNew booking created with ID: 677d3f4150211976fd54b011[39m
+2025-01-07 21:23:18:2318 [32minfo[39m: [32mNew booking created with ID: 677d3fdebbad53116c0fb99f[39m
+2025-01-07 21:26:16:2616 [32minfo[39m: [32mNew booking created with ID: 677d408fbbad53116c0fb9f6[39m
+2025-01-07 21:29:40:2940 [32minfo[39m: [32mNew booking created with ID: 677d415c2b1b235963a05162[39m
+2025-01-07 21:32:37:3237 [32minfo[39m: [32mNew booking created with ID: 677d420ce13736338277ab8c[39m
+2025-01-07 21:35:08:358 [32minfo[39m: [32mNew booking created with ID: 677d42a4e13736338277abca[39m
+2025-01-07 21:39:16:3916 [32minfo[39m: [32mNew booking created with ID: 677d439c09cdf23ed1961528[39m
+2025-01-07 21:55:14:5514 [32minfo[39m: [32mNew booking created with ID: 677d475aa0801d30c13d1e41[39m
+2025-01-07 22:02:42:242 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:02:50:250 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:51:12:5112 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:53:57:5357 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 22:54:08:548 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:07:33:733 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:10:17:1017 [31merror[39m: [31mError creating booking: Selected dates are not available[39m
+2025-01-07 23:14:35:1435 [32minfo[39m: [32mNew booking created with ID: 677d59f369f6166af2a1ba19[39m
+2025-01-07 23:14:36:1436 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:14:36:1436 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:16:30:1630 [32minfo[39m: [32mNew booking created with ID: 677d5a66812aebedd4465a28[39m
+2025-01-07 23:16:31:1631 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:16:31:1631 [31merror[39m: [31mError fetching booking undefined: Cast to ObjectId failed for value "undefined" (type string) at path "_id" for model "Booking"[39m
+2025-01-07 23:29:17:2917 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-07 23:29:17:2917 [32minfo[39m: [32mNew booking created with ID: 677d5d652f505ddda547b5e0[39m
+2025-01-07 23:31:20:3120 [32minfo[39m: [32mUpdating booking 677d5d652f505ddda547b5e0 with data:[39m
+2025-01-07 23:31:20:3120 [32minfo[39m: [32mSuccessfully updated booking 677d5d652f505ddda547b5e0[39m
+2025-01-07 23:34:08:348 [32minfo[39m: [32mUpdating booking 677d5d652f505ddda547b5e0 with data:[39m
+2025-01-07 23:34:08:348 [32minfo[39m: [32mSuccessfully updated booking 677d5d652f505ddda547b5e0[39m
+2025-01-07 23:35:30:3530 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-07 23:35:30:3530 [32minfo[39m: [32mNew booking created with ID: 677d5edab99bda71dfa4e6c4[39m
+2025-01-07 23:41:43:4143 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-07 23:41:43:4143 [32minfo[39m: [32mNew booking created with ID: 677d604f93b6cfeaa254469a[39m
+2025-01-07 23:44:03:443 [32minfo[39m: [32mUpdating booking 677d604f93b6cfeaa254469a with data:[39m
+2025-01-07 23:44:03:443 [32minfo[39m: [32mSuccessfully updated booking 677d604f93b6cfeaa254469a[39m
+2025-01-07 23:46:15:4615 [32minfo[39m: [32mUpdating booking 677d604f93b6cfeaa254469a with data:[39m
+2025-01-07 23:46:15:4615 [32minfo[39m: [32mSuccessfully updated booking 677d604f93b6cfeaa254469a[39m
+2025-01-07 23:46:20:4620 [32minfo[39m: [32mUpdating booking 677d604f93b6cfeaa254469a with data:[39m
+2025-01-07 23:46:20:4620 [32minfo[39m: [32mSuccessfully updated booking 677d604f93b6cfeaa254469a[39m
+2025-01-07 23:46:44:4644 [32minfo[39m: [32mUpdating booking 677d604f93b6cfeaa254469a with data:[39m
+2025-01-07 23:46:44:4644 [32minfo[39m: [32mSuccessfully updated booking 677d604f93b6cfeaa254469a[39m
+2025-01-07 23:49:02:492 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-07 23:49:02:492 [32minfo[39m: [32mNew booking created with ID: 677d6206875c8dcf7c3c9b8d[39m
+2025-01-07 23:49:10:4910 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-07 23:49:10:4910 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-07 23:51:50:5150 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-07 23:51:50:5150 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-07 23:51:52:5152 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-07 23:51:52:5152 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-07 23:52:01:521 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-07 23:52:01:521 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-07 23:52:06:526 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-07 23:52:06:526 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-08 00:00:34:034 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-08 00:00:34:034 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-08 00:00:35:035 [32minfo[39m: [32mUpdating booking 677d6206875c8dcf7c3c9b8d with data:[39m
+2025-01-08 00:00:35:035 [32minfo[39m: [32mSuccessfully updated booking 677d6206875c8dcf7c3c9b8d[39m
+2025-01-08 00:01:29:129 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-08 00:01:29:129 [32minfo[39m: [32mNew booking created with ID: 677d64f1875c8dcf7c3c9bea[39m
+2025-01-08 00:07:10:710 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-08 00:07:10:710 [32minfo[39m: [32mNew booking created with ID: 677d6646602e8f9468930b52[39m
+2025-01-08 00:07:17:717 [32minfo[39m: [32mUpdating booking 677d6646602e8f9468930b52 with data:[39m
+2025-01-08 00:07:18:718 [32minfo[39m: [32mSuccessfully updated booking 677d6646602e8f9468930b52[39m
+2025-01-08 00:16:26:1626 [32minfo[39m: [32mCreating booking with data:[39m
+2025-01-08 00:16:26:1626 [32minfo[39m: [32mNew booking created with ID: 677d6872602e8f9468930bdc[39m
+2025-01-08 00:16:33:1633 [32minfo[39m: [32mUpdating booking 677d6872602e8f9468930bdc with data:[39m
+2025-01-08 00:16:33:1633 [32minfo[39m: [32mSuccessfully updated booking 677d6872602e8f9468930bdc[39m
+2025-01-08 00:23:47:2347 [32minfo[39m: [32mNew booking created with ID: 677d6a2bb36291a31193f201[39m
+2025-01-08 00:24:07:247 [32minfo[39m: [32mNew booking created with ID: 677d6a3eb36291a31193f234[39m
+2025-01-08 00:25:12:2512 [32minfo[39m: [32mNew booking created with ID: 677d6a806ecde2f3b200769d[39m
+2025-01-08 00:29:01:291 [32minfo[39m: [32mNew booking created with ID: 677d6b65c8339f681508568e[39m
+2025-01-08 00:29:12:2912 [32minfo[39m: [32mNew booking created with ID: 677d6b6fc8339f68150856c1[39m
+2025-01-08 00:31:06:316 [32minfo[39m: [32mNew booking created with ID: 677d6be1c8339f68150856e0[39m
+2025-01-08 00:32:07:327 [32minfo[39m: [32mNew booking created with ID: 677d6c1fc8339f6815085727[39m
+2025-01-08 00:34:20:3420 [32minfo[39m: [32mNew booking created with ID: 677d6ca4c8339f6815085756[39m
+2025-01-08 00:36:35:3635 [32minfo[39m: [32mNew booking created with ID: 677d6d2b0d543c24b5b2e709[39m
+2025-01-08 01:15:31:1531 [32minfo[39m: [32mNew booking created with ID: 677d764b3d59df27baa2a1d5[39m
+2025-01-08 01:16:20:1620 [32minfo[39m: [32mNew booking created with ID: 677d767b3d59df27baa2a224[39m
+2025-01-08 01:19:22:1922 [32minfo[39m: [32mNew booking created with ID: 677d77313d59df27baa2a269[39m
+2025-01-08 01:19:31:1931 [32minfo[39m: [32mNew booking created with ID: 677d773b3d59df27baa2a286[39m
+2025-01-08 01:19:51:1951 [32minfo[39m: [32mNew booking created with ID: 677d774f3d59df27baa2a2a4[39m
+2025-01-08 01:25:47:2547 [32minfo[39m: [32mNew booking created with ID: 677d78b38e9f90d4f348f03c[39m
+2025-01-08 01:29:00:290 [32minfo[39m: [32mNew booking created with ID: 677d79731ef362a521d257ef[39m
+2025-01-08 01:31:17:3117 [32minfo[39m: [32mNew booking created with ID: 677d79fd1ef362a521d2587a[39m
+2025-01-08 01:32:46:3246 [32minfo[39m: [32mNew booking created with ID: 677d7a561ef362a521d258c0[39m
+2025-01-08 01:36:01:361 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d79fd1ef362a521d2587a[39m
+2025-01-08 01:36:01:361 [32minfo[39m: [32mFound booking:[39m
+2025-01-08 01:36:05:365 [32minfo[39m: [32mConfirmation email sent successfully for booking ID: 677d79fd1ef362a521d2587a[39m
+2025-01-08 01:36:39:3639 [32minfo[39m: [32mAttempting to send confirmation email for booking ID: 677d79731ef362a521d257ef[39m
+2025-01-08 01:36:39:3639 [32minfo[39m: [32mFound booking:[39m
+2025-01-08 01:36:44:3644 [32minfo[39m: [32mConfirmation email sent successfully for booking ID: 677d79731ef362a521d257ef[39m
+2025-01-08 01:37:43:3743 [32minfo[39m: [32mNew booking created with ID: 677d7b7f31be5b784acf4d6e[39m
+2025-01-08 01:40:25:4025 [32minfo[39m: [32mNew booking created with ID: 677d7c2131be5b784acf4df6[39m
+2025-01-08 02:42:46:4246 [32minfo[39m: [32mNew booking created with ID: 677d8abe6e463348d0005dac[39m
+2025-01-08 02:43:23:4323 [32minfo[39m: [32mNew booking created with ID: 677d8ae363b41edbe1c1918d[39m
+2025-01-08 02:45:18:4518 [32minfo[39m: [32mNew booking created with ID: 677d8b55082d8fb0bf7754d7[39m
+2025-01-08 02:47:29:4729 [32minfo[39m: [32mNew booking created with ID: 677d8bd9031735e89a2f3cac[39m
+2025-01-08 02:50:26:5026 [32minfo[39m: [32mNew booking created with ID: 677d8c8a4f74bb0fe1f2a692[39m
+2025-01-08 02:52:43:5243 [32minfo[39m: [32mNew booking created with ID: 677d8d134f74bb0fe1f2a6e9[39m
+2025-01-08 02:54:28:5428 [32minfo[39m: [32mNew booking created with ID: 677d8d7c4f74bb0fe1f2a71a[39m
+2025-01-08 03:10:28:1028 [32minfo[39m: [32mNew booking created with ID: 677d913c701b862474f19de7[39m
+2025-01-08 12:54:51:5451 [32minfo[39m: [32mNew booking created with ID: 677e1a33701b862474f19f7e[39m
